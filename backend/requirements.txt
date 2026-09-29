@@ -4,3 +4,5 @@ pydantic-settings
 sqlalchemy
 pytest
 httpx
+psutil
+scapy
