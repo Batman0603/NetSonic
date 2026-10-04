@@ -9,6 +9,10 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 logger = logging.getLogger(__name__)
 
 
+class NetSonicError(Exception):
+    """Base exception for expected NetSonic application errors."""
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     """Register application-wide exception handlers."""
 

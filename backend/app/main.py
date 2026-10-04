@@ -7,6 +7,7 @@ from app.api.devices import router as devices_router
 from app.api.discovery import router as discovery_router
 from app.api.health import router as health_router
 from app.api.interfaces import router as interfaces_router
+from app.api.traffic import router as traffic_router
 
 from app.core.logging_config import configure_logging
 from app.db.session import Base, engine
@@ -92,6 +93,14 @@ app.include_router(
     prefix="/api",
     tags=["Topology"],
 )
+
+app.include_router(
+    traffic_router,
+    prefix="/api",
+)
+
+
+
 
 
 @app.get("/", tags=["Root"])

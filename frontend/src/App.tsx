@@ -4,6 +4,7 @@ import "./App.css";
 
 import { DiscoveryPanel } from "./components/DiscoveryPanel";
 import { TopologyView } from "./components/TopologyView";
+import { TrafficMonitor } from "./components/TrafficMonitor";
 
 import {
   getInterfaces,
@@ -45,6 +46,9 @@ function App() {
 
   return (
     <div className="app">
+      {/* =========================================================
+          HEADER
+      ========================================================= */}
       <header className="app-header">
         <div className="app-brand">
           <div className="brand-mark">NS</div>
@@ -62,63 +66,93 @@ function App() {
           </div>
 
           <div className="header-version">
-            PHASE 2
+            PHASE 3
           </div>
         </div>
       </header>
 
+      {/* =========================================================
+          MAIN DASHBOARD
+      ========================================================= */}
       <main className="app-main">
+        {/* -------------------------------------------------------
+            INTRO
+        ------------------------------------------------------- */}
         <section className="dashboard-intro">
           <div>
-            <p className="eyebrow">NETWORK INTELLIGENCE PLATFORM</p>
+            <p className="eyebrow">
+              NETWORK INTELLIGENCE PLATFORM
+            </p>
 
-            <h2>Local Network Discovery &amp; Topology</h2>
+            <h2>
+              Local Network Discovery, Topology &amp; Traffic
+            </h2>
 
             <p className="intro-description">
               Discover authorized devices, inspect network interfaces,
-              and visualize logical relationships across the local network.
+              visualize logical relationships, and monitor live network
+              traffic across the selected interface.
             </p>
           </div>
 
           <div className="intro-status">
             <span className="status-dot" />
+
             <div>
               <strong>LOCAL NETWORK</strong>
-              <span>Monitoring active</span>
+              <span>Monitoring available</span>
             </div>
           </div>
         </section>
 
+        {/* -------------------------------------------------------
+            INTERFACE ERROR
+        ------------------------------------------------------- */}
         {interfaceError && (
-          <div className="notice notice-error" role="alert">
+          <div
+            className="notice notice-error"
+            role="alert"
+          >
             <strong>Interface error:</strong>
             <span>{interfaceError}</span>
           </div>
         )}
 
+        {/* =======================================================
+            PHASE 1 — NETWORK DISCOVERY
+        ======================================================= */}
         <DiscoveryPanel />
 
+        {/* =======================================================
+            NETWORK INTERFACE SELECTOR
+        ======================================================= */}
         <section className="interface-toolbar">
           <div className="interface-toolbar-info">
             <div className="toolbar-icon">⌁</div>
 
             <div>
-              <p className="eyebrow">TOPOLOGY SOURCE</p>
-              <h3>Network interface</h3>
+              <p className="eyebrow">
+                NETWORK SOURCE
+              </p>
+
+              <h3>
+                Network interface
+              </h3>
+
               <p>
-                Select the interface used as the source for topology
-                construction.
+                Select the interface used for topology construction
+                and live traffic monitoring.
               </p>
             </div>
           </div>
 
           <div className="interface-selector-wrapper">
-            <label htmlFor="topology-interface">
+            <label htmlFor="network-interface">
               Interface
             </label>
 
             <select
-              id="topology-interface"
+              id="network-interface"
               value={selectedInterface}
               onChange={(event) =>
                 setSelectedInterface(event.target.value)
@@ -136,31 +170,67 @@ function App() {
                 >
                   {networkInterface.name} —{" "}
                   {networkInterface.ipv4_address}
-                  {!networkInterface.is_up ? " (down)" : ""}
+                  {!networkInterface.is_up
+                    ? " (down)"
+                    : ""}
                 </option>
               ))}
             </select>
           </div>
         </section>
 
+        {/* =======================================================
+            PHASE 2 — NETWORK TOPOLOGY
+        ======================================================= */}
         {selectedInterface ? (
-          <TopologyView interfaceName={selectedInterface} />
+          <TopologyView
+            interfaceName={selectedInterface}
+          />
         ) : (
           <section className="topology-empty">
             <div className="empty-icon">⌁</div>
-            <h3>No network interface selected</h3>
+
+            <h3>
+              No network interface selected
+            </h3>
+
             <p>
-              Select an active interface above to build the logical
-              network topology.
+              Select an active interface above to build the
+              logical network topology.
+            </p>
+          </section>
+        )}
+
+        {/* =======================================================
+            PHASE 3 — TRAFFIC MONITORING
+        ======================================================= */}
+        {selectedInterface ? (
+          <TrafficMonitor
+            interfaceName={selectedInterface}
+          />
+        ) : (
+          <section className="topology-empty">
+            <div className="empty-icon">◌</div>
+
+            <h3>
+              Traffic monitoring unavailable
+            </h3>
+
+            <p>
+              Select an active network interface above to start
+              live traffic monitoring.
             </p>
           </section>
         )}
       </main>
 
+      {/* =========================================================
+          FOOTER
+      ========================================================= */}
       <footer className="app-footer">
         <span>NetSonic</span>
-        <span>Local Network Discovery</span>
-        <span>Phase 2</span>
+        <span>Local Network Intelligence</span>
+        <span>Phase 3</span>
       </footer>
     </div>
   );
