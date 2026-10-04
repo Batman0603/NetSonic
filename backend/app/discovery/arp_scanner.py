@@ -6,6 +6,7 @@ from scapy.all import ARP, Ether, srp
 from scapy.error import Scapy_Exception
 
 logger = logging.getLogger(__name__)
+MAX_SCAN_ADDRESSES = 512
 
 
 class ArpScanError(Exception):
@@ -25,9 +26,9 @@ def scan_subnet(
 ) -> list[DiscoveredHost]:
     """Discover responding hosts on a bounded local IPv4 subnet."""
 
-    if subnet.num_addresses > 256:
+    if subnet.num_addresses > MAX_SCAN_ADDRESSES:
         raise ArpScanError(
-            "Subnet is too large. Use a subnet containing at most 256 addresses."
+            "Subnet is too large. Use a subnet containing at most 512 addresses."
         )
 
     try:

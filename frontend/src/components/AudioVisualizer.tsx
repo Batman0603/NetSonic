@@ -303,12 +303,10 @@ export function AudioVisualizer({
       );
 
       const barCount = 96;
-
-      const usableBins =
-        Math.min(
-          frequencyData.length,
-          512,
-        );
+      const nyquist = analyser.context.sampleRate / 2;
+      const minFrequency = 40;
+      const maxFrequency = Math.min(18_000, nyquist);
+      const octaveRatio = maxFrequency / minFrequency;
 
       const barWidth =
         width / barCount;
@@ -344,16 +342,30 @@ export function AudioVisualizer({
         index < barCount;
         index += 1
       ) {
-        const bin =
-          Math.floor(
-            (index /
-              barCount) *
-              usableBins,
-          );
+        const lowerFrequency = minFrequency * Math.pow(
+          octaveRatio,
+          index / barCount,
+        );
+        const upperFrequency = minFrequency * Math.pow(
+          octaveRatio,
+          (index + 1) / barCount,
+        );
+        const firstBin = Math.max(
+          0,
+          Math.floor((lowerFrequency / nyquist) * frequencyData.length),
+        );
+        const lastBin = Math.min(
+          frequencyData.length - 1,
+          Math.max(firstBin, Math.ceil((upperFrequency / nyquist) * frequencyData.length)),
+        );
+        let peak = 0;
 
-        const value =
-          frequencyData[bin] /
-          255;
+        for (let bin = firstBin; bin <= lastBin; bin += 1) {
+          peak = Math.max(peak, frequencyData[bin]);
+        }
+
+        // Log frequency buckets preserve low notes while showing their harmonics higher up.
+        const value = Math.pow(peak / 255, 0.82);
 
         const barHeight =
           Math.max(
@@ -485,13 +497,62 @@ export function AudioVisualizer({
       );
 
       const points = 160;
+      const plot = {
+        left: 52,
+        right: width - 52,
+        top: 18,
+        bottom: height - 32,
+      };
+      const plotWidth = Math.max(1, plot.right - plot.left);
+      const plotHeight = Math.max(1, plot.bottom - plot.top);
+      const nyquist = analyser.context.sampleRate / 2;
+      const minFrequency = Math.min(20, nyquist / 2);
+      const maxFrequency = Math.min(20_000, nyquist);
+      const frequencyPosition = (frequency: number) =>
+        Math.log(frequency / minFrequency) /
+        Math.log(maxFrequency / minFrequency);
+
+      const frequencyGuides = [
+        20,
+        100,
+        500,
+        1_000,
+        5_000,
+        10_000,
+        20_000,
+      ].filter((frequency) =>
+        frequency >= minFrequency && frequency <= maxFrequency,
+      );
+
+      context.save();
+      context.strokeStyle = colors.grid;
+      context.lineWidth = 1;
+      context.globalAlpha = 0.7;
+
+      for (const frequency of frequencyGuides) {
+        const x = plot.left + frequencyPosition(frequency) * plotWidth;
+        context.beginPath();
+        context.moveTo(x, plot.top);
+        context.lineTo(x, plot.bottom);
+        context.stroke();
+      }
+
+      for (const level of [0, 0.25, 0.5, 0.75, 1]) {
+        const y = plot.bottom - level * plotHeight;
+        context.beginPath();
+        context.moveTo(plot.left, y);
+        context.lineTo(plot.right, y);
+        context.stroke();
+      }
+
+      context.globalAlpha = 1;
 
       context.beginPath();
 
       context.strokeStyle =
         colors.primary;
 
-      context.lineWidth = 1.8;
+      context.lineWidth = 2;
 
       for (
         let index = 0;
@@ -502,25 +563,24 @@ export function AudioVisualizer({
           index /
           (points - 1);
 
-        const bin =
-          Math.floor(
-            position *
-              (frequencyData.length -
-                1),
-          );
+        const frequency = minFrequency * Math.pow(
+          maxFrequency / minFrequency,
+          position,
+        );
+        const floatingBin = Math.min(
+          frequencyData.length - 1,
+          (frequency / nyquist) * frequencyData.length,
+        );
+        const lowerBin = Math.floor(floatingBin);
+        const upperBin = Math.min(frequencyData.length - 1, lowerBin + 1);
+        const blend = floatingBin - lowerBin;
+        const value = (
+          frequencyData[lowerBin] * (1 - blend) +
+          frequencyData[upperBin] * blend
+        ) / 255;
 
-        const value =
-          frequencyData[bin] /
-          255;
-
-        const x =
-          position * width;
-
-        const y =
-          height -
-          value *
-            height *
-            0.9;
+        const x = plot.left + position * plotWidth;
+        const y = plot.bottom - value * plotHeight * 0.92;
 
         if (index === 0) {
           context.moveTo(
@@ -543,32 +603,16 @@ export function AudioVisualizer({
       context.font =
         "9px monospace";
 
-      context.textAlign =
-        "left";
+      context.textAlign = "center";
+      for (const frequency of frequencyGuides) {
+        const x = plot.left + frequencyPosition(frequency) * plotWidth;
+        const label = frequency >= 1_000
+          ? `${frequency / 1_000} kHz`
+          : `${frequency} Hz`;
+        context.fillText(label, x, height - 10);
+      }
 
-      context.fillText(
-        "20 Hz",
-        8,
-        height - 8,
-      );
-
-      context.textAlign =
-        "center";
-
-      context.fillText(
-        "1 kHz",
-        width * 0.42,
-        height - 8,
-      );
-
-      context.textAlign =
-        "right";
-
-      context.fillText(
-        "20 kHz",
-        width - 8,
-        height - 8,
-      );
+      context.restore();
     };
 
     const drawOscilloscope = (
@@ -1005,13 +1049,15 @@ export function AudioVisualizer({
         : colors.background;
       context.fillRect(0, 0, width, height);
 
-      drawGrid(
-        width,
-        height,
-        style === "filled"
-          ? "rgba(255, 105, 45, 0.12)"
-          : colors.grid,
-      );
+      if (style !== "frequency") {
+        drawGrid(
+          width,
+          height,
+          style === "filled"
+            ? "rgba(255, 105, 45, 0.12)"
+            : colors.grid,
+        );
+      }
 
       if (!active) {
         drawIdle(

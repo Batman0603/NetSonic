@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import "../App.css";
+import "./DashboardPage.css";
 
 import { DiscoveryPanel } from "../components/DiscoveryPanel";
 import { TopologyView } from "../components/TopologyView";
@@ -56,7 +57,7 @@ function DashboardPage() {
   }, []);
 
   return (
-    <div className="app">
+    <div className="app dashboard-shell">
       <header className="app-header">
         <div className="app-brand">
           <div className="brand-mark">
@@ -91,8 +92,16 @@ function DashboardPage() {
         </div>
       </header>
 
+      <nav className="dashboard-nav" aria-label="Main navigation">
+        <a className="dashboard-nav-active" href="#overview">Overview</a>
+        <a href="#discovery">Discovery</a>
+        <a href="#topology">Topology</a>
+        <a href="#traffic">Traffic</a>
+        <a href="#sonification">Sonification</a>
+      </nav>
+
       <main className="app-main">
-        <section className="dashboard-intro">
+        <section className="dashboard-intro" id="overview">
           <div>
             <p className="eyebrow">
               NETWORK INTELLIGENCE PLATFORM
@@ -141,8 +150,6 @@ function DashboardPage() {
             </span>
           </div>
         )}
-
-        <DiscoveryPanel />
 
         <section className="interface-toolbar">
           <div className="interface-toolbar-info">
@@ -215,41 +222,35 @@ function DashboardPage() {
           </div>
         </section>
 
-        {selectedInterface ? (
-          <>
-            <TopologyView
-              interfaceName={
-                selectedInterface
-              }
-            />
+        <div className="dashboard-grid">
+          <div className="dashboard-column dashboard-left-column">
+            <section className="dashboard-widget dashboard-discovery" id="discovery">
+              <DiscoveryPanel />
+            </section>
 
-            <TrafficMonitor
-              interfaceName={
-                selectedInterface
-              }
-            />
+            {selectedInterface ? (
+              <section className="dashboard-widget dashboard-topology" id="topology">
+                <TopologyView interfaceName={selectedInterface} />
+              </section>
+            ) : (
+              <section className="dashboard-widget dashboard-empty" id="topology">
+                <div className="empty-icon">⌁</div>
+                <h3>No network interface selected</h3>
+                <p>Select an active interface above to build the topology and start traffic sonification.</p>
+              </section>
+            )}
+          </div>
 
-            <SonificationPanel
-              interfaceName={
-                selectedInterface
-              }
-            />
-          </>
-        ) : (
-          <section className="topology-empty">
-            <div className="empty-icon">
-              ⌁
-            </div>
+          <div className="dashboard-column dashboard-right-column">
+            <section className="dashboard-widget dashboard-traffic" id="traffic">
+              <TrafficMonitor interfaceName={selectedInterface} />
+            </section>
+          </div>
+        </div>
 
-            <h3>
-              No network interface selected
-            </h3>
-
-            <p>
-              Select an active interface above
-              to build the topology and start
-              traffic sonification.
-            </p>
+        {selectedInterface && (
+          <section className="dashboard-widget dashboard-sonification" id="sonification">
+            <SonificationPanel interfaceName={selectedInterface} />
           </section>
         )}
       </main>

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.discovery.arp_scanner import (
     ArpScanError,
     DiscoveredHost,
+    MAX_SCAN_ADDRESSES,
     scan_subnet,
 )
 from app.discovery.interfaces import InterfaceInfo, list_ipv4_interfaces
@@ -66,14 +67,14 @@ def _validate_subnet(
     if not isinstance(subnet, ipaddress.IPv4Network):
         raise DiscoveryServiceError("Only IPv4 subnets are supported.")
 
-    if subnet.prefixlen < 24:
+    if subnet.prefixlen < 23:
         raise DiscoveryServiceError(
-            "For Phase 1, use a subnet of /24 or smaller address range."
+            "For Phase 1, use a subnet of /23 or a smaller address range."
         )
 
-    if subnet.num_addresses > 256:
+    if subnet.num_addresses > MAX_SCAN_ADDRESSES:
         raise DiscoveryServiceError(
-            "Subnet is too large. The maximum supported size is 256 addresses."
+            "Subnet is too large. The maximum supported size is 512 addresses."
         )
 
     if not subnet.subnet_of(interface_network):

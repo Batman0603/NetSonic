@@ -1,0 +1,564 @@
+.dashboard-shell {
+  --dash-ink: #23272a;
+  --dash-muted: #707a82;
+  --dash-line: #d9dee2;
+  --dash-blue: #1677a8;
+  background: #edf0f2;
+}
+
+.dashboard-shell .app-header {
+  min-height: 58px;
+  padding: 0 max(22px, calc((100vw - 1600px) / 2));
+  background: #202427;
+  border-bottom: 0;
+  box-shadow: none;
+  color: #f8fafb;
+}
+
+.dashboard-shell .brand-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 4px;
+  background: #e8a834;
+  color: #202427;
+  font-size: 12px;
+}
+
+.dashboard-shell .app-brand h1 {
+  color: #fff;
+  font-size: 18px;
+  letter-spacing: 0;
+}
+
+.dashboard-shell .app-brand p {
+  color: #bac2c7;
+  font-size: 11px;
+}
+
+.dashboard-shell .app-header-right {
+  gap: 18px;
+}
+
+.dashboard-shell .monitor-status {
+  color: #d5dbde;
+  font-size: 11px;
+}
+
+.dashboard-shell .header-version {
+  border-color: #4a5359;
+  color: #c5cdd1;
+}
+
+.dashboard-shell .learn-nav-link {
+  padding: 7px 10px;
+  border-color: #596268;
+  background: transparent;
+  color: #f2f5f6;
+  font-size: 11px;
+}
+
+.dashboard-shell .learn-nav-link:hover {
+  border-color: #e8a834;
+  color: #ffd477;
+}
+
+.dashboard-nav {
+  display: flex;
+  min-height: 36px;
+  align-items: stretch;
+  gap: 2px;
+  overflow-x: auto;
+  padding: 0 max(22px, calc((100vw - 1600px) / 2));
+  border-bottom: 1px solid #cfd5d9;
+  background: #fff;
+}
+
+.dashboard-nav a {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0 13px;
+  border-bottom: 2px solid transparent;
+  color: #515c64;
+  font-size: 11px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.dashboard-nav a:hover,
+.dashboard-nav .dashboard-nav-active {
+  border-bottom-color: #e3a332;
+  color: #20272b;
+}
+
+.dashboard-shell .app-main {
+  width: min(1600px, calc(100% - 36px));
+  padding: 14px 0 26px;
+}
+
+.dashboard-shell .dashboard-intro {
+  min-height: 68px;
+  margin-bottom: 9px;
+  padding: 11px 14px;
+  border: 1px solid var(--dash-line);
+  border-left: 3px solid #e3a332;
+  box-shadow: 0 1px 2px rgb(20 32 40 / 4%);
+}
+
+.dashboard-shell .dashboard-intro .eyebrow {
+  margin-bottom: 2px;
+  color: #75818a;
+  font-size: 9px;
+}
+
+.dashboard-shell .dashboard-intro h2 {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.dashboard-shell .intro-description {
+  color: #77828a;
+  font-size: 11px;
+}
+
+.dashboard-shell .intro-status {
+  min-width: 138px;
+  padding: 7px 9px;
+}
+
+.dashboard-shell .interface-toolbar {
+  min-height: 56px;
+  margin-top: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--dash-line);
+  border-left: 3px solid #607681;
+  box-shadow: 0 1px 2px rgb(20 32 40 / 4%);
+}
+
+.dashboard-shell .interface-toolbar-info .toolbar-icon,
+.dashboard-shell .interface-toolbar-info p:last-child {
+  display: none;
+}
+
+.dashboard-shell .interface-toolbar-info h3 {
+  font-size: 12px;
+}
+
+.dashboard-shell .interface-toolbar-info .eyebrow {
+  margin-bottom: 2px;
+  font-size: 8px;
+}
+
+.dashboard-shell .interface-selector-wrapper {
+  min-width: min(330px, 50%);
+  grid-template-columns: auto minmax(160px, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-shell .interface-selector-wrapper label {
+  font-size: 10px;
+}
+
+.dashboard-shell .interface-selector-wrapper select {
+  min-height: 30px;
+  font-size: 11px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: stretch;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.dashboard-column {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dashboard-right-column {
+  align-self: stretch;
+}
+
+.dashboard-traffic {
+  display: flex;
+  flex: 1 0 auto;
+}
+
+.dashboard-traffic > .traffic-section {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+}
+
+.dashboard-widget {
+  min-width: 0;
+  scroll-margin-top: 12px;
+}
+
+.dashboard-sonification {
+  margin-top: 12px;
+}
+
+.dashboard-shell .discovery-section,
+.dashboard-shell .topology-section,
+.dashboard-shell .traffic-section,
+.dashboard-shell .sonification-panel {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--dash-line);
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(20 32 40 / 5%);
+}
+
+.dashboard-shell .section-heading,
+.dashboard-shell .topology-header {
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+.dashboard-shell .section-heading h2,
+.dashboard-shell .topology-header h2,
+.dashboard-shell .traffic-header h2 {
+  color: #29343a;
+  font-size: 14px;
+}
+
+.dashboard-shell .section-description,
+.dashboard-shell .topology-description,
+.dashboard-shell .traffic-description {
+  color: var(--dash-muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.dashboard-shell .discovery-controls {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 7px;
+  margin: 9px 0;
+}
+
+.dashboard-shell .discovery-controls label {
+  gap: 3px;
+  font-size: 9px;
+}
+
+.dashboard-shell .discovery-controls input,
+.dashboard-shell .discovery-controls select {
+  min-height: 29px;
+  font-size: 10px;
+}
+
+.dashboard-shell .discovery-controls button,
+.dashboard-shell .secondary-button,
+.dashboard-shell .refresh-button,
+.dashboard-shell .primary-button {
+  min-height: 29px;
+  padding: 5px 9px;
+  font-size: 10px;
+}
+
+.dashboard-shell .inventory-heading {
+  margin: 8px 0 5px;
+}
+
+.dashboard-shell .inventory-heading h3 {
+  font-size: 11px;
+}
+
+.dashboard-shell .inventory-heading p {
+  font-size: 9px;
+}
+
+.dashboard-shell .device-table {
+  min-width: 500px;
+  font-size: 9px;
+}
+
+.dashboard-shell .device-table th,
+.dashboard-shell .device-table td {
+  padding: 5px 6px;
+}
+
+.dashboard-shell .device-table th {
+  font-size: 8px;
+}
+
+.dashboard-shell .traffic-header {
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.dashboard-shell .traffic-header .eyebrow {
+  margin-bottom: 2px;
+  font-size: 8px;
+}
+
+.dashboard-shell .traffic-controls {
+  gap: 7px;
+}
+
+.dashboard-shell .traffic-live-badge {
+  gap: 6px;
+  padding: 5px 8px;
+  font-size: 9px;
+}
+
+.dashboard-shell .traffic-metrics {
+  gap: 6px;
+}
+
+.dashboard-shell .traffic-card {
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid #e0e5e8;
+  border-radius: 3px;
+  background: #fbfcfd;
+}
+
+.dashboard-shell .traffic-card span {
+  font-size: 9px;
+}
+
+.dashboard-shell .traffic-card strong {
+  margin: 5px 0 2px;
+  font-size: 17px;
+}
+
+.dashboard-shell .traffic-card small {
+  font-size: 9px;
+}
+
+.dashboard-shell .traffic-status-bar {
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 7px 9px;
+  border-radius: 3px;
+  font-size: 10px;
+}
+
+.dashboard-shell .traffic-chart-grid,
+.dashboard-shell .traffic-bottom-grid {
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.dashboard-shell .traffic-bottom-grid {
+  flex: 1;
+  grid-auto-rows: 1fr;
+}
+
+.dashboard-shell .traffic-bottom-grid > .traffic-panel {
+  height: 100%;
+}
+
+.dashboard-shell .traffic-chart-card,
+.dashboard-shell .traffic-panel {
+  padding: 9px;
+  border-radius: 3px;
+}
+
+.dashboard-shell .traffic-card-heading {
+  margin-bottom: 6px;
+}
+
+.dashboard-shell .traffic-card-heading h3 {
+  font-size: 11px;
+}
+
+.dashboard-shell .traffic-card-heading p {
+  margin-top: 2px;
+  font-size: 9px;
+}
+
+.dashboard-shell .traffic-chart {
+  height: 175px;
+}
+
+.dashboard-shell .traffic-list-row {
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 10px;
+}
+
+.dashboard-shell .traffic-list-row strong,
+.dashboard-shell .traffic-list-row small {
+  font-size: 9px;
+}
+
+.dashboard-shell .topology-canvas {
+  height: 340px;
+}
+
+.dashboard-shell .topology-workspace {
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 8px;
+}
+
+.dashboard-shell .sonification-header {
+  gap: 12px;
+  padding-bottom: 12px;
+}
+
+.dashboard-shell .sonification-header h2 {
+  margin: 3px 0 4px;
+  font-size: 20px;
+}
+
+.dashboard-shell .sonification-description {
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.dashboard-shell .sonification-controls {
+  margin-top: 10px;
+  padding: 9px 11px;
+  border-radius: 4px;
+}
+
+.dashboard-shell .sonification-visualizer-card {
+  margin-top: 10px;
+  padding: 9px;
+  border-radius: 4px;
+}
+
+.dashboard-shell .audio-visualizer {
+  height: 210px;
+}
+
+.dashboard-shell .visualizer-controls {
+  margin-top: 10px;
+}
+
+.dashboard-shell .sonification-sound-guide-items {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.dashboard-shell .sonification-summary-grid {
+  gap: 6px;
+}
+
+.dashboard-shell .sonification-summary-card {
+  min-height: 54px;
+  padding: 8px;
+}
+
+.dashboard-shell .dashboard-empty {
+  margin: 0;
+  padding: 24px;
+  border: 1px solid var(--dash-line);
+  background: #fff;
+  text-align: center;
+}
+
+.dashboard-shell .app-footer {
+  min-height: 42px;
+  background: #202427;
+  color: #bec6ca;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-shell .discovery-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-shell .discovery-controls button {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-shell .app-header {
+    padding: 0 12px;
+  }
+
+  .dashboard-shell .app-header-right {
+    display: flex;
+    gap: 8px;
+  }
+
+  .dashboard-shell .monitor-status,
+  .dashboard-shell .header-version {
+    display: none;
+  }
+
+  .dashboard-nav {
+    padding: 0 8px;
+  }
+
+  .dashboard-nav a {
+    padding: 0 10px;
+  }
+
+  .dashboard-shell .app-main {
+    width: calc(100% - 20px);
+    padding-top: 10px;
+  }
+
+  .dashboard-shell .dashboard-intro {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .dashboard-shell .interface-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .dashboard-shell .interface-selector-wrapper {
+    min-width: 0;
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .dashboard-shell .topology-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell .topology-canvas {
+    height: 280px;
+  }
+
+  .dashboard-shell .sonification-sound-guide-items {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboard-shell .dashboard-intro {
+    padding: 10px;
+  }
+
+  .dashboard-shell .intro-status {
+    width: 100%;
+  }
+
+  .dashboard-shell .discovery-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell .traffic-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-shell .traffic-chart-grid,
+  .dashboard-shell .traffic-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell .sonification-sound-guide-items {
+    grid-template-columns: 1fr;
+  }
+}

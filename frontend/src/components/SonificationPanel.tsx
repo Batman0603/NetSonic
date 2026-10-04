@@ -39,7 +39,6 @@ interface AudioVoice {
 const MASTER_VOLUME = 0.8;
 
 const MUSICAL_SCALE = [
-  220.0,
   261.63,
   293.66,
   329.63,
@@ -52,8 +51,7 @@ const MUSICAL_SCALE = [
   880.0,
 ];
 
-const MELODY_STEPS = [0, 2, 4, 3, 1, 2, 4, 2];
-const MUSICAL_PULSE_RATES = [0.75, 1, 1.25, 1.5, 1.75, 2];
+const MELODY_STEPS = [0, 2, 3, 2, 1, 2, 3, 0];
 
 function clamp(
   value: number,
@@ -144,43 +142,25 @@ function getFifthFrequency(
   return fifthNote * 2 ** (octave + (fifthDegree >= 5 ? 1 : 0));
 }
 
-function getMusicalPulseRate(pulseRate: number): number {
-  const normalized =
-    (clamp(pulseRate, 0.5, 8) - 0.5) / 7.5;
-  const target = 0.75 + normalized * 1.25;
+function createPianoWave(
+  context: AudioContext,
+  protocol: string,
+): PeriodicWave {
+  const harmonicsByProtocol: Record<string, number[]> = {
+    TCP: [1, 0.42, 0.22, 0.12, 0.075, 0.05, 0.035, 0.025, 0.018, 0.014, 0.011, 0.008, 0.006, 0.004, 0.003, 0.002],
+    UDP: [1, 0.58, 0.36, 0.24, 0.16, 0.11, 0.075, 0.052, 0.038, 0.028, 0.021, 0.016, 0.012, 0.009, 0.007, 0.005],
+    ICMP: [1, 0.3, 0.2, 0.13, 0.09, 0.06, 0.042, 0.03, 0.022, 0.017, 0.013, 0.01, 0.007, 0.005, 0.004, 0.003],
+  };
+  const harmonics = harmonicsByProtocol[protocol.toUpperCase()] ??
+    [1, 0.38, 0.2, 0.12, 0.075, 0.05, 0.035, 0.025, 0.018, 0.014, 0.01, 0.007, 0.005, 0.004, 0.003, 0.002];
+  const real = new Float32Array(harmonics.length + 1);
+  const imaginary = new Float32Array(harmonics.length + 1);
 
-  return MUSICAL_PULSE_RATES.reduce((nearest, rate) =>
-    Math.abs(rate - target) < Math.abs(nearest - target)
-      ? rate
-      : nearest,
-  );
-}
+  harmonics.forEach((amplitude, index) => {
+    imaginary[index + 1] = amplitude;
+  });
 
-function getWaveform(
-  parameters: SonificationParameters,
-): OscillatorType {
-  if (
-    parameters.protocol ===
-    "UDP"
-  ) {
-    return "triangle";
-  }
-
-  if (
-    parameters.protocol ===
-    "ICMP"
-  ) {
-    return "triangle";
-  }
-
-  if (
-    parameters.protocol ===
-    "TCP"
-  ) {
-    return "sine";
-  }
-
-  return "sine";
+  return context.createPeriodicWave(real, imaginary);
 }
 
 function getDirectionPan(
@@ -735,7 +715,7 @@ export function SonificationPanel({
           2048;
 
         analyserNode.smoothingTimeConstant =
-          0.72;
+          0.52;
 
         /*
          * Make the visualizer respond strongly
@@ -836,11 +816,8 @@ export function SonificationPanel({
             intensity,
           );
 
-        const baseVolume = clamp(
-          parameters.volume * intensity * 0.11,
-          0,
-          0.16,
-        );
+        // Silence the continuous tones; the sequenced piano notes carry the sound.
+        const baseVolume = 0;
 
         const upload =
           uploadVoiceRef.current;
@@ -951,7 +928,7 @@ export function SonificationPanel({
           );
 
           ambient.gain.gain.setTargetAtTime(
-            intensity * 0.018,
+            0,
             now,
             0.12,
           );
@@ -994,29 +971,23 @@ export function SonificationPanel({
           return;
         }
 
-        const melodyOffset =
-          MELODY_STEPS[
-            melodyStepRef.current % MELODY_STEPS.length
-          ];
-        const melodyPosition = melodyOffset;
+        const phrasePosition = melodyStepRef.current % MELODY_STEPS.length;
+        const melodyOffset = MELODY_STEPS[phrasePosition];
         const frequency = Math.min(
           1320,
-          MUSICAL_SCALE[melodyPosition % MUSICAL_SCALE.length] *
+          MUSICAL_SCALE[melodyOffset] *
             (intensity > 0.72 ? 2 : 1),
         );
         melodyStepRef.current += 1;
 
-        const waveform =
-          getWaveform(
-            parameters,
-          );
-
+        // Use an audible floor so light traffic such as a ping is still
+        // heard. Raise the note level smoothly with traffic intensity.
         const volume = clamp(
-          parameters.volume *
-            intensity * 0.1,
-          0,
-          0.16,
+          0.055 + Math.sqrt(intensity) * 0.12,
+          0.055,
+          0.175,
         );
+        const accent = phrasePosition === 0 ? 1 : 0.78;
 
         const direction =
           parameters.direction.toLowerCase();
@@ -1038,8 +1009,9 @@ export function SonificationPanel({
         const filter =
           context.createBiquadFilter();
 
-        oscillator.type =
-          waveform;
+        oscillator.setPeriodicWave(
+          createPianoWave(context, parameters.protocol),
+        );
 
         oscillator.frequency.value =
           frequency;
@@ -1050,13 +1022,9 @@ export function SonificationPanel({
         filter.type =
           "lowpass";
 
-        filter.frequency.value =
-          1600 +
-          intensity *
-            5200;
+        filter.frequency.value = 9000 + intensity * 4000;
 
-        filter.Q.value =
-          1.2;
+        filter.Q.value = 0.55;
 
         oscillator.connect(
           filter,
@@ -1075,17 +1043,12 @@ export function SonificationPanel({
             context.destination,
         );
 
-        const peak = clamp(
-          volume * 0.65,
-          0.003,
-          0.1,
-        );
+        const peak = clamp(volume * accent, 0.045, 0.175);
 
         const attack =
-          0.012;
+          0.008;
 
-        const decay =
-          0.26 + (1 - intensity) * 0.12;
+        const decay = 0.58;
 
         gain.gain.setValueAtTime(
           0,
@@ -1099,9 +1062,13 @@ export function SonificationPanel({
         );
 
         gain.gain.exponentialRampToValueAtTime(
+          Math.max(0.001, peak * 0.58),
+          now + 0.14,
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
           0.001,
           now +
-            attack +
             decay,
         );
 
@@ -1111,9 +1078,7 @@ export function SonificationPanel({
 
         oscillator.stop(
           now +
-            attack +
-            decay +
-            0.03,
+            decay + 0.03,
         );
       },
       [],
@@ -1138,13 +1103,13 @@ export function SonificationPanel({
               return;
             }
 
-            const pulseRate = getMusicalPulseRate(
-              parameters.pulse_rate_hz,
+            const trafficTempo = clamp(
+              (parameters.pulse_rate_hz - 0.5) / 7.5,
+              0,
+              1,
             );
-
-            const interval =
-              1000 /
-              pulseRate;
+            const beatsPerMinute = 100 + trafficTempo * 35;
+            const interval = 60_000 / beatsPerMinute / 2;
 
             triggerPulse();
 
@@ -1281,6 +1246,7 @@ export function SonificationPanel({
             interfaceName,
           );
 
+          melodyStepRef.current = 0;
           audioEnabledRef.current =
             true;
 
@@ -1575,28 +1541,28 @@ export function SonificationPanel({
       <div className="sonification-sound-guide" aria-label="Audio sound guide">
         <div className="sonification-sound-guide-heading">
           <span>WHAT YOU’RE HEARING</span>
-          <small>Network events are mapped to a soft A-minor pentatonic soundscape.</small>
+          <small>Short piano-like notes play a repeating C-major pentatonic melody at a steady musical tempo.</small>
         </div>
         <div className="sonification-sound-guide-items">
           <div className="sonification-sound-guide-item">
-            <strong>DOWNLOAD · LEFT</strong>
-            <span>A low, smooth note follows incoming traffic.</span>
+            <strong>INBOUND · LEFT</strong>
+            <span>Incoming traffic notes are placed to the left.</span>
           </div>
           <div className="sonification-sound-guide-item">
-            <strong>UPLOAD · RIGHT</strong>
-            <span>A higher note forms a consonant fifth with download.</span>
+            <strong>OUTBOUND · RIGHT</strong>
+            <span>Outgoing traffic notes are placed to the right.</span>
           </div>
           <div className="sonification-sound-guide-item">
             <strong>PACKETS · MELODY</strong>
-            <span>Soft plucked notes play in a repeating musical phrase; busier traffic speeds it up.</span>
+            <span>Packet rate sets the tempo from 100 to 135 BPM; the melody stays on the beat.</span>
           </div>
           <div className="sonification-sound-guide-item">
-            <strong>PROTOCOL · TONE</strong>
-            <span>TCP uses a smooth sine tone; UDP and ICMP use a gentle triangle tone.</span>
+            <strong>PROTOCOL · TIMBRE</strong>
+            <span>TCP is warm, UDP brighter, and ICMP rounder; other protocols use a balanced piano tone.</span>
           </div>
           <div className="sonification-sound-guide-item">
             <strong>ACTIVITY · VOLUME</strong>
-            <span>More activity raises the sound level. Inbound notes pan left, outbound right, and local traffic stays centered.</span>
+            <span>Higher network activity makes each piano note louder. Local traffic stays centered.</span>
           </div>
         </div>
       </div>
