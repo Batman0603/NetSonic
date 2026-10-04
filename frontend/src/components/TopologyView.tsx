@@ -4,7 +4,11 @@ import cytoscape, {
   type ElementDefinition,
 } from "cytoscape";
 
-import { getTopology, type TopologyResponse } from "../services/topology";
+import {
+  getTopology,
+  type TopologyNode,
+  type TopologyResponse,
+} from "../services/topology";
 
 interface TopologyViewProps {
   interfaceName: string;
@@ -19,13 +23,19 @@ export function TopologyView({
   const [topology, setTopology] =
     useState<TopologyResponse | null>(null);
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [selectedNode, setSelectedNode] =
+    useState<TopologyNode | null>(null);
+
+  const [isLoading, setIsLoading] =
+    useState(false);
+
   const [errorMessage, setErrorMessage] =
     useState<string | null>(null);
 
   async function loadTopology(): Promise<void> {
-    if (!interfaceName) {
+    if (!interfaceName.trim()) {
       setTopology(null);
+      setSelectedNode(null);
       setErrorMessage(
         "Select a network interface to display the topology.",
       );
@@ -37,9 +47,17 @@ export function TopologyView({
 
     try {
       const result = await getTopology(interfaceName);
+
       setTopology(result);
+
+      const localNode = result.nodes.find(
+        (node) => node.type === "local",
+      );
+
+      setSelectedNode(localNode ?? null);
     } catch (error) {
       setTopology(null);
+      setSelectedNode(null);
 
       setErrorMessage(
         error instanceof Error
@@ -65,9 +83,13 @@ export function TopologyView({
         data: {
           id: node.id,
           label: node.label,
+          displayLabel: node.ip_address
+            ? `${node.label}\n${node.ip_address}`
+            : node.label,
           type: node.type,
           ip: node.ip_address ?? "N/A",
           mac: node.mac_address ?? "N/A",
+          hostname: node.hostname ?? "N/A",
           status: node.status ?? "unknown",
         },
       })),
@@ -87,11 +109,15 @@ export function TopologyView({
 
       elements,
 
+      minZoom: 0.5,
+      maxZoom: 2,
+      wheelSensitivity: 0.15,
+
       layout: {
         name: "breadthfirst",
         directed: true,
-        padding: 45,
-        spacingFactor: 1.25,
+        padding: 55,
+        spacingFactor: 1.45,
         avoidOverlap: true,
         roots: topology.gateway_ip
           ? [`gateway:${topology.gateway_ip}`]
@@ -102,29 +128,41 @@ export function TopologyView({
         {
           selector: "node",
           style: {
-            label: "data(label)",
-            "text-valign": "bottom",
+            label: "data(displayLabel)",
+            shape: "roundrectangle",
+            "text-valign": "center",
             "text-halign": "center",
-            "text-margin-y": 10,
-            "font-size": 12,
-            color: "#172033",
-            "background-color": "#64748b",
-            width: 48,
-            height: 48,
-            "border-width": 3,
-            "border-color": "#ffffff",
+            "text-wrap": "wrap",
+            "text-max-width": "140px",
+            "font-family":
+              "Inter, ui-sans-serif, system-ui, sans-serif",
+            "font-size": 11,
+            "font-weight": 600,
+            color: "#263238",
+            "background-color": "#ffffff",
+            width: 150,
+            height: 64,
+            padding: 8,
+            "border-width": 1,
+            "border-color": "#b8c2cc",
             "overlay-opacity": 0,
+            "shadow-blur": 10,
+            "shadow-color": "#64748b",
+            "shadow-opacity": 0.12,
+            "shadow-offset-x": 0,
+            "shadow-offset-y": 3,
           },
         },
 
         {
           selector: 'node[type = "local"]',
           style: {
-            label: "data(label)",
-            "background-color": "#4f46e5",
-            "border-color": "#3730a3",
-            width: 58,
-            height: 58,
+            "background-color": "#eef2ff",
+            "border-color": "#4f46e5",
+            "border-width": 2,
+            color: "#312e81",
+            width: 165,
+            height: 70,
             "font-weight": 700,
           },
         },
@@ -132,11 +170,12 @@ export function TopologyView({
         {
           selector: 'node[type = "gateway"]',
           style: {
-            label: "data(label)",
-            "background-color": "#0f766e",
-            "border-color": "#115e59",
-            width: 64,
-            height: 64,
+            "background-color": "#ecfdf5",
+            "border-color": "#0f766e",
+            "border-width": 2,
+            color: "#115e59",
+            width: 165,
+            height: 70,
             "font-weight": 700,
           },
         },
@@ -144,65 +183,82 @@ export function TopologyView({
         {
           selector: 'node[type = "device"]',
           style: {
-            label: "data(label)",
-            "background-color": "#64748b",
-            "border-color": "#475569",
+            "background-color": "#ffffff",
+            "border-color": "#94a3b8",
+            color: "#334155",
           },
         },
 
         {
           selector: 'node[status = "online"]',
           style: {
-            "border-color": "#22c55e",
+            "border-color": "#22a06b",
+          },
+        },
+
+        {
+          selector: ".selected-node",
+          style: {
+            "border-width": 3,
+            "border-color": "#2563eb",
+            "shadow-blur": 18,
+            "shadow-color": "#2563eb",
+            "shadow-opacity": 0.2,
           },
         },
 
         {
           selector: "edge",
           style: {
-            width: 2,
-            "line-color": "#cbd5e1",
-            "target-arrow-color": "#94a3b8",
+            width: 1.5,
+            "line-color": "#a8b4c2",
+            "target-arrow-color": "#7b8794",
             "target-arrow-shape": "triangle",
             "curve-style": "bezier",
-            opacity: 0.9,
+            "arrow-scale": 0.8,
+            opacity: 0.85,
           },
         },
 
         {
           selector: 'edge[relationship = "default-gateway"]',
           style: {
-            width: 3,
+            width: 2.5,
             "line-color": "#4f46e5",
             "target-arrow-color": "#4f46e5",
+            "arrow-scale": 0.9,
           },
         },
       ],
     });
 
     cy.on("tap", "node", (event) => {
-      const node = event.target;
+      const nodeId = event.target.id();
 
-      const label = node.data("label");
-      const ip = node.data("ip");
-      const mac = node.data("mac");
-      const status = node.data("status");
-
-      node.data(
-        "label",
-        `${label}\n${ip}\n${status}`,
+      const selected = topology.nodes.find(
+        (node) => node.id === nodeId,
       );
 
-      window.setTimeout(() => {
-        node.data("label", label);
-      }, 2500);
+      if (!selected) {
+        return;
+      }
 
-      console.info("NetSonic topology node", {
-        label,
-        ip,
-        mac,
-        status,
-      });
+      cy.nodes().removeClass("selected-node");
+      event.target.addClass("selected-node");
+
+      setSelectedNode(selected);
+    });
+
+    cy.on("tap", (event) => {
+      if (event.target === cy) {
+        cy.nodes().removeClass("selected-node");
+
+        const localNode = topology.nodes.find(
+          (node) => node.type === "local",
+        );
+
+        setSelectedNode(localNode ?? null);
+      }
     });
 
     cyRef.current = cy;
@@ -217,102 +273,230 @@ export function TopologyView({
     <section className="topology-section">
       <div className="topology-header">
         <div>
-          <p className="eyebrow">Phase 2</p>
+          <div className="topology-title-row">
+            <span className="phase-label">PHASE 2</span>
+
+            <span className="topology-live-status">
+              <span className="status-dot" />
+              LIVE VIEW
+            </span>
+          </div>
 
           <h2>Network topology</h2>
 
           <p className="topology-description">
-            Logical topology inferred from the selected interface,
+            Logical relationships inferred from the selected interface,
             default gateway, and discovered local devices.
           </p>
         </div>
 
         <button
           type="button"
-          className="secondary-button"
+          className="refresh-button"
           onClick={() => void loadTopology()}
           disabled={isLoading || !interfaceName}
         >
-          {isLoading ? "Loading..." : "Refresh topology"}
+          <span>↻</span>
+          {isLoading ? "Refreshing..." : "Refresh topology"}
         </button>
       </div>
 
       {errorMessage && (
         <div className="notice notice-error" role="alert">
-          {errorMessage}
+          <strong>Topology error:</strong>
+          <span>{errorMessage}</span>
         </div>
       )}
 
       {isLoading && (
         <div className="topology-loading">
-          Building network topology...
+          <div className="loading-spinner" />
+          <span>Building network topology...</span>
         </div>
       )}
 
       {!isLoading && topology && (
         <>
-          <div className="topology-summary">
-            <div className="topology-stat">
-              <span>Interface</span>
+          <div className="topology-metrics">
+            <div className="topology-metric">
+              <span>INTERFACE</span>
               <strong>{topology.interface_name}</strong>
             </div>
 
-            <div className="topology-stat">
-              <span>Local IP</span>
+            <div className="topology-metric">
+              <span>LOCAL IP</span>
               <strong>{topology.interface_ip}</strong>
             </div>
 
-            <div className="topology-stat">
-              <span>Subnet</span>
+            <div className="topology-metric">
+              <span>SUBNET</span>
               <strong>{topology.subnet}</strong>
             </div>
 
-            <div className="topology-stat">
-              <span>Gateway</span>
+            <div className="topology-metric">
+              <span>GATEWAY</span>
               <strong>
                 {topology.gateway_ip ?? "Not detected"}
               </strong>
             </div>
 
-            <div className="topology-stat">
-              <span>Nodes</span>
+            <div className="topology-metric">
+              <span>NODES</span>
               <strong>{topology.node_count}</strong>
             </div>
 
-            <div className="topology-stat">
-              <span>Links</span>
+            <div className="topology-metric">
+              <span>LINKS</span>
               <strong>{topology.edge_count}</strong>
             </div>
           </div>
 
-          <div className="topology-legend">
-            <span>
-              <i className="legend-dot legend-local" />
-              This device
-            </span>
+          <div className="topology-workspace">
+            <div className="topology-map-panel">
+              <div className="panel-header">
+                <div>
+                  <span className="panel-kicker">
+                    TOPOLOGY MAP
+                  </span>
 
-            <span>
-              <i className="legend-dot legend-gateway" />
-              Gateway
-            </span>
+                  <h3>Logical network relationships</h3>
+                </div>
 
-            <span>
-              <i className="legend-dot legend-device" />
-              Discovered device
-            </span>
+                <div className="map-controls">
+                  <span>Scroll to zoom</span>
+                  <span>Click node for details</span>
+                </div>
+              </div>
+
+              <div className="topology-legend">
+                <span>
+                  <i className="legend-dot legend-local" />
+                  This device
+                </span>
+
+                <span>
+                  <i className="legend-dot legend-gateway" />
+                  Gateway
+                </span>
+
+                <span>
+                  <i className="legend-dot legend-device" />
+                  Discovered device
+                </span>
+              </div>
+
+              <div
+                ref={containerRef}
+                className="topology-canvas"
+                aria-label="Network topology visualization"
+              />
+
+              <div className="topology-canvas-footer">
+                <span>
+                  {topology.node_count} nodes
+                </span>
+
+                <span className="footer-separator">•</span>
+
+                <span>
+                  {topology.edge_count} logical links
+                </span>
+              </div>
+            </div>
+
+            <aside className="node-details-panel">
+              <div className="panel-header">
+                <div>
+                  <span className="panel-kicker">
+                    NODE DETAILS
+                  </span>
+
+                  <h3>Selected node</h3>
+                </div>
+              </div>
+
+              {selectedNode ? (
+                <div className="node-details">
+                  <div className="node-identity">
+                    <div
+                      className={`node-type-icon node-type-${selectedNode.type}`}
+                    >
+                      {selectedNode.type === "local"
+                        ? "PC"
+                        : selectedNode.type === "gateway"
+                          ? "GW"
+                          : "DV"}
+                    </div>
+
+                    <div>
+                      <strong>{selectedNode.label}</strong>
+
+                      <span>
+                        {selectedNode.type === "local"
+                          ? "Local device"
+                          : selectedNode.type === "gateway"
+                            ? "Default gateway"
+                            : "Discovered device"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="node-status-row">
+                    <span
+                      className={
+                        selectedNode.status === "online"
+                          ? "device-status status-online"
+                          : "device-status"
+                      }
+                    >
+                      <span className="mini-status-dot" />
+                      {selectedNode.status ?? "unknown"}
+                    </span>
+                  </div>
+
+                  <dl className="node-properties">
+                    <div>
+                      <dt>IP address</dt>
+                      <dd>{selectedNode.ip_address ?? "N/A"}</dd>
+                    </div>
+
+                    <div>
+                      <dt>MAC address</dt>
+                      <dd className="mono">
+                        {selectedNode.mac_address ?? "N/A"}
+                      </dd>
+                    </div>
+
+                    <div>
+                      <dt>Hostname</dt>
+                      <dd>
+                        {selectedNode.hostname ?? "N/A"}
+                      </dd>
+                    </div>
+
+                    <div>
+                      <dt>Node type</dt>
+                      <dd>{selectedNode.type}</dd>
+                    </div>
+                  </dl>
+                </div>
+              ) : (
+                <div className="node-details-empty">
+                  <span>—</span>
+                  <p>Select a topology node to inspect its details.</p>
+                </div>
+              )}
+            </aside>
           </div>
 
-          <div
-            ref={containerRef}
-            className="topology-canvas"
-            aria-label="Network topology visualization"
-          />
-
-          <p className="topology-note">
-            Topology links are logical inferences based on the local
-            network and gateway. They do not represent confirmed
-            physical switch or wireless access-point connections.
-          </p>
+          <div className="topology-note">
+            <strong>Topology scope:</strong>
+            <span>
+              Links represent logical inferences from local network
+              information and the detected gateway. They do not confirm
+              physical switch, router, or wireless access-point paths.
+            </span>
+          </div>
         </>
       )}
     </section>

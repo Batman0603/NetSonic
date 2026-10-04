@@ -11,24 +11,21 @@ import {
 } from "./services/discovery";
 
 function App() {
-  const [interfaces, setInterfaces] =
-    useState<NetworkInterface[]>([]);
-
-  const [selectedInterface, setSelectedInterface] =
-    useState("");
-
-  const [interfaceError, setInterfaceError] =
-    useState<string | null>(null);
+  const [interfaces, setInterfaces] = useState<NetworkInterface[]>([]);
+  const [selectedInterface, setSelectedInterface] = useState("");
+  const [interfaceError, setInterfaceError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadInterfaces(): Promise<void> {
       try {
+        setInterfaceError(null);
+
         const result = await getInterfaces();
 
         setInterfaces(result);
 
         const activeInterface = result.find(
-          (item) => item.is_up,
+          (networkInterface) => networkInterface.is_up,
         );
 
         if (activeInterface) {
@@ -50,102 +47,120 @@ function App() {
     <div className="app">
       <header className="app-header">
         <div className="app-brand">
-          <h1>NetSonic</h1>
+          <div className="brand-mark">NS</div>
 
-          <p>
-            See the network. Hear the network.
-          </p>
+          <div>
+            <h1>NetSonic</h1>
+            <p>See the network. Hear the network.</p>
+          </div>
         </div>
 
-        <div className="app-status">
-          <span className="status-indicator" />
+        <div className="app-header-right">
+          <div className="monitor-status">
+            <span className="status-indicator status-online-indicator" />
+            <span>Network Monitoring</span>
+          </div>
 
-          <span>
-            Network Monitoring
-          </span>
+          <div className="header-version">
+            PHASE 2
+          </div>
         </div>
       </header>
 
       <main className="app-main">
-        <section className="welcome-section">
-          <p className="eyebrow">
-            Network intelligence platform
-          </p>
+        <section className="dashboard-intro">
+          <div>
+            <p className="eyebrow">NETWORK INTELLIGENCE PLATFORM</p>
 
-          <h2>
-            Local Network Discovery &amp; Topology
-          </h2>
+            <h2>Local Network Discovery &amp; Topology</h2>
 
-          <p>
-            Discover authorized devices on your local network
-            and visualize their logical network relationships.
-          </p>
+            <p className="intro-description">
+              Discover authorized devices, inspect network interfaces,
+              and visualize logical relationships across the local network.
+            </p>
+          </div>
+
+          <div className="intro-status">
+            <span className="status-dot" />
+            <div>
+              <strong>LOCAL NETWORK</strong>
+              <span>Monitoring active</span>
+            </div>
+          </div>
         </section>
 
         {interfaceError && (
-          <div
-            className="notice notice-error"
-            role="alert"
-          >
-            {interfaceError}
+          <div className="notice notice-error" role="alert">
+            <strong>Interface error:</strong>
+            <span>{interfaceError}</span>
           </div>
         )}
 
         <DiscoveryPanel />
 
-        <section className="topology-interface-selector">
-          <div>
-            <p className="eyebrow">
-              Topology source
-            </p>
+        <section className="interface-toolbar">
+          <div className="interface-toolbar-info">
+            <div className="toolbar-icon">⌁</div>
 
-            <h3>
-              Select interface
-            </h3>
-
-            <p>
-              The topology is generated from the selected
-              local network interface.
-            </p>
+            <div>
+              <p className="eyebrow">TOPOLOGY SOURCE</p>
+              <h3>Network interface</h3>
+              <p>
+                Select the interface used as the source for topology
+                construction.
+              </p>
+            </div>
           </div>
 
-          <select
-            value={selectedInterface}
-            onChange={(event) =>
-              setSelectedInterface(event.target.value)
-            }
-          >
-            <option value="">
-              Select an interface
-            </option>
+          <div className="interface-selector-wrapper">
+            <label htmlFor="topology-interface">
+              Interface
+            </label>
 
-            {interfaces.map((networkInterface) => (
-              <option
-                key={networkInterface.name}
-                value={networkInterface.name}
-                disabled={!networkInterface.is_up}
-              >
-                {networkInterface.name} —{" "}
-                {networkInterface.ipv4_address}
-                {!networkInterface.is_up
-                  ? " (down)"
-                  : ""}
+            <select
+              id="topology-interface"
+              value={selectedInterface}
+              onChange={(event) =>
+                setSelectedInterface(event.target.value)
+              }
+            >
+              <option value="">
+                Select an interface
               </option>
-            ))}
-          </select>
+
+              {interfaces.map((networkInterface) => (
+                <option
+                  key={networkInterface.name}
+                  value={networkInterface.name}
+                  disabled={!networkInterface.is_up}
+                >
+                  {networkInterface.name} —{" "}
+                  {networkInterface.ipv4_address}
+                  {!networkInterface.is_up ? " (down)" : ""}
+                </option>
+              ))}
+            </select>
+          </div>
         </section>
 
-        {selectedInterface && (
-          <TopologyView
-            interfaceName={selectedInterface}
-          />
+        {selectedInterface ? (
+          <TopologyView interfaceName={selectedInterface} />
+        ) : (
+          <section className="topology-empty">
+            <div className="empty-icon">⌁</div>
+            <h3>No network interface selected</h3>
+            <p>
+              Select an active interface above to build the logical
+              network topology.
+            </p>
+          </section>
         )}
       </main>
 
       <footer className="app-footer">
-        <p>
-          NetSonic · Local Network Discovery · Phase 2
-        </p>
+        <span>NetSonic</span>
+        <span>Local Network Discovery</span>
+        <span>Phase 2</span>
       </footer>
     </div>
   );
