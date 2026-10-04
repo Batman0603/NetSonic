@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import threading
+from datetime import datetime, timezone
 
 from app.core.exceptions import NetSonicError
 from app.discovery.interfaces import (
@@ -24,15 +25,11 @@ class TrafficMonitor:
 
     def __init__(self) -> None:
         self._capture: PacketCapture | None = None
-
         self._aggregator = TrafficAggregator()
-
-        self._thread: threading.Thread | None = None
-
         self._interface_name: str | None = None
-
+        self._local_ip: str | None = None
+        self._started_at: datetime | None = None
         self._lock = threading.RLock()
-
         self._last_error: str | None = None
 
     @property
@@ -53,10 +50,7 @@ class TrafficMonitor:
         with self._lock:
             return self._last_error
 
-    def start(
-        self,
-        interface_name: str,
-    ) -> None:
+    def start(self, interface_name: str) -> None:
         interface_name = interface_name.strip()
 
         if not interface_name:
@@ -106,8 +100,9 @@ class TrafficMonitor:
                 )
 
             self._last_error = None
-
             self._interface_name = interface_name
+            self._local_ip = interface.ipv4_address
+            self._started_at = datetime.now(timezone.utc)
 
             self._aggregator.start(
                 interface_name=interface_name,
@@ -150,7 +145,7 @@ class TrafficMonitor:
                 if self._capture is capture:
                     self._capture = None
 
-        except Exception as exc:
+        except Exception:
             logger.exception(
                 "Unexpected packet capture error."
             )
@@ -171,8 +166,9 @@ class TrafficMonitor:
                 return
 
             self._capture = None
-
             self._interface_name = None
+            self._local_ip = None
+            self._started_at = None
 
         try:
             capture.stop()
@@ -191,8 +187,11 @@ class TrafficMonitor:
 
     def snapshot(
         self,
+        interface_name: str,
         window_seconds: int = 60,
     ) -> dict:
+        interface_name = interface_name.strip()
+
         with self._lock:
             if self._capture is None:
                 if self._last_error:
@@ -204,8 +203,15 @@ class TrafficMonitor:
                     "Traffic monitoring has not been started."
                 )
 
+            if self._interface_name != interface_name:
+                raise NetSonicError(
+                    "Traffic monitoring is running on "
+                    f"'{self._interface_name}', not "
+                    f"'{interface_name}'."
+                )
+
         return self._aggregator.snapshot(
-            window_seconds=window_seconds
+            window_seconds=window_seconds,
         )
 
     def status(self) -> dict:
@@ -213,6 +219,8 @@ class TrafficMonitor:
             return {
                 "running": self.running,
                 "interface_name": self._interface_name,
+                "local_ip": self._local_ip,
+                "started_at": self._started_at,
                 "last_error": self._last_error,
             }
 

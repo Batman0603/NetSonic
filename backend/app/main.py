@@ -8,10 +8,13 @@ from app.api.discovery import router as discovery_router
 from app.api.health import router as health_router
 from app.api.interfaces import router as interfaces_router
 from app.api.traffic import router as traffic_router
+from app.api.topology import router as topology_router
+from app.api.sonification import router as sonification_router
 
 from app.core.logging_config import configure_logging
 from app.db.session import Base, engine
-from app.api.topology import router as topology_router
+from app.discovery.interfaces import list_ipv4_interfaces
+from app.traffic.service import traffic_monitor
 
 # Ensure SQLAlchemy registers the Device model before creating tables.
 from app.models.device import Device  # noqa: F401
@@ -22,11 +25,23 @@ configure_logging()
 
 
 # Frontend development URLs.
-# Add your frontend's URL here if Vite uses a different port.
 CORS_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
+
+
+def get_default_interface() -> str | None:
+    """
+    Find the first active non-loopback IPv4 network interface.
+    """
+    interfaces = list_ipv4_interfaces()
+
+    for interface in interfaces:
+        if interface.is_up and interface.ipv4_address:
+            return interface.name
+
+    return None
 
 
 @asynccontextmanager
@@ -34,11 +49,54 @@ async def lifespan(app: FastAPI):
     """
     Application startup and shutdown lifecycle.
 
-    Creates database tables if they do not already exist.
+    Startup:
+    - Creates database tables.
+    - Detects an active IPv4 interface.
+    - Automatically starts traffic monitoring.
+
+    Shutdown:
+    - Stops traffic monitoring cleanly.
     """
+    # ---------------------------------------------------------
+    # Startup
+    # ---------------------------------------------------------
+
     Base.metadata.create_all(bind=engine)
 
+    try:
+        default_interface = get_default_interface()
+
+        if default_interface:
+            traffic_monitor.start(default_interface)
+
+            print(
+                f"NetSonic traffic monitoring started "
+                f"on interface '{default_interface}'."
+            )
+        else:
+            print(
+                "NetSonic started, but no active IPv4 "
+                "network interface was found."
+            )
+
+    except Exception as exc:
+        print(
+            f"Unable to automatically start traffic monitoring: {exc}"
+        )
+
     yield
+
+    # ---------------------------------------------------------
+    # Shutdown
+    # ---------------------------------------------------------
+
+    try:
+        traffic_monitor.stop()
+        print("NetSonic traffic monitoring stopped.")
+    except Exception as exc:
+        print(
+            f"Unable to stop traffic monitoring cleanly: {exc}"
+        )
 
 
 app = FastAPI(
@@ -52,8 +110,7 @@ app = FastAPI(
 )
 
 
-# Configure CORS so the React/Vite frontend can communicate
-# with the FastAPI backend during local development.
+# Configure CORS.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
@@ -63,7 +120,10 @@ app.add_middleware(
 )
 
 
-# Register API routers.
+# -------------------------------------------------------------
+# Register API routers
+# -------------------------------------------------------------
+
 app.include_router(
     health_router,
     prefix="/api",
@@ -99,8 +159,10 @@ app.include_router(
     prefix="/api",
 )
 
-
-
+app.include_router(
+    sonification_router,
+    prefix="/api",
+)
 
 
 @app.get("/", tags=["Root"])

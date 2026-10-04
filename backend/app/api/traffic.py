@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, Query
 from app.core.exceptions import NetSonicError
 from app.schemas.traffic import (
     TrafficSnapshotResponse,
+    TrafficStartRequest,
     TrafficStartResponse,
     TrafficStatusResponse,
     TrafficStopResponse,
@@ -20,19 +21,14 @@ router = APIRouter(
     response_model=TrafficStartResponse,
 )
 def start_traffic_monitoring(
-    interface_name: str = Query(
-        ...,
-        min_length=1,
-    ),
+    request: TrafficStartRequest,
 ):
     try:
-        traffic_monitor.start(
-            interface_name
-        )
+        traffic_monitor.start(request.interface_name)
 
         return TrafficStartResponse(
             message="Traffic monitoring started.",
-            interface_name=interface_name,
+            interface_name=request.interface_name,
         )
 
     except NetSonicError as exc:
@@ -93,6 +89,10 @@ def get_traffic_status():
     response_model=TrafficSnapshotResponse,
 )
 def get_traffic_snapshot(
+    interface_name: str = Query(
+        ...,
+        min_length=1,
+    ),
     window_seconds: int = Query(
         60,
         ge=1,
@@ -101,6 +101,7 @@ def get_traffic_snapshot(
 ):
     try:
         return traffic_monitor.snapshot(
+            interface_name=interface_name,
             window_seconds=window_seconds,
         )
 

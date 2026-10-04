@@ -1,0 +1,175 @@
+.network-spectrum {
+  position: relative;
+  overflow: hidden;
+  min-height: 300px;
+  padding: 20px 22px 16px;
+  border: 1px solid #26323c;
+  border-radius: 8px;
+  background:
+    linear-gradient(
+      180deg,
+      #151b21 0%,
+      #10161b 100%
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.spectrum-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+}
+
+.spectrum-topline > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.spectrum-topline span {
+  color: #8e9aa5;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.spectrum-topline strong {
+  padding: 4px 8px;
+  border: 1px solid #35414b;
+  border-radius: 4px;
+  color: #dce3e8;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.spectrum-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #8e9aa5;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.spectrum-live-dot,
+.spectrum-idle-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.spectrum-live-dot {
+  background: #58d68d;
+  box-shadow:
+    0 0 8px rgba(88, 214, 141, 0.8);
+}
+
+.spectrum-idle-dot {
+  background: #67727b;
+}
+
+.spectrum-display {
+  position: relative;
+  height: 215px;
+  padding: 10px 4px 0;
+  overflow: hidden;
+
+  background-image:
+    linear-gradient(
+      rgba(255, 255, 255, 0.035) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.025) 1px,
+      transparent 1px
+    );
+
+  background-size:
+    100% 25%,
+    5% 100%;
+}
+
+.spectrum-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 100%;
+  gap: 3px;
+}
+
+.spectrum-bar {
+  width: 100%;
+  min-height: 4%;
+  border-radius: 2px 2px 0 0;
+  transform-origin: bottom;
+  transition:
+    height 0.06s linear,
+    opacity 0.06s linear;
+
+  box-shadow:
+    0 0 7px currentColor;
+}
+
+.spectrum-bar-0 {
+  color: #ff3cac;
+  background: #ff3cac;
+}
+
+.spectrum-bar-1 {
+  color: #c33cff;
+  background: #c33cff;
+}
+
+.spectrum-bar-2 {
+  color: #764cff;
+  background: #764cff;
+}
+
+.spectrum-bar-3 {
+  color: #3478ff;
+  background: #3478ff;
+}
+
+.spectrum-bar-4 {
+  color: #24c8ff;
+  background: #24c8ff;
+}
+
+.spectrum-bar-5 {
+  color: #36e0b1;
+  background: #36e0b1;
+}
+
+.spectrum-bar-6 {
+  color: #d8e936;
+  background: #d8e936;
+}
+
+.spectrum-bar-7 {
+  color: #ff9f2f;
+  background: #ff9f2f;
+}
+
+.spectrum-baseline {
+  position: absolute;
+  right: 4px;
+  bottom: 0;
+  left: 4px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.spectrum-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 9px;
+  color: #626e78;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}

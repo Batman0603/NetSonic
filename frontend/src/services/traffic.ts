@@ -151,9 +151,11 @@ export async function getTrafficStatus(): Promise<TrafficStatus> {
 }
 
 export async function getTrafficSnapshot(
+  interfaceName: string,
   windowSeconds = 60,
 ): Promise<TrafficSnapshot> {
   const params = new URLSearchParams({
+    interface_name: interfaceName,
     window_seconds: String(windowSeconds),
   });
 

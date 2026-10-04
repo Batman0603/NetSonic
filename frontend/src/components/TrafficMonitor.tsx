@@ -114,7 +114,7 @@ export function TrafficMonitor({
     async function updateTraffic(): Promise<void> {
       try {
         const snapshot =
-          await getTrafficSnapshot(60);
+          await getTrafficSnapshot(interfaceName, 60);
 
         if (!cancelled) {
           setTraffic(snapshot);

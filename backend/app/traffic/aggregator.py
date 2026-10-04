@@ -40,10 +40,6 @@ class TrafficBucket:
 
 
 def classify_protocol(protocol_number: int) -> str:
-    """
-    Convert IPv4 protocol numbers into human-readable names.
-    """
-
     protocol_map = {
         1: "ICMP",
         6: "TCP",
@@ -77,7 +73,8 @@ class TrafficAggregator:
     """
     Thread-safe rolling traffic aggregator.
 
-    The aggregator keeps only traffic metadata and counters.
+    Only packet metadata and counters are retained.
+    Packet payloads are never stored.
     """
 
     def __init__(
@@ -94,7 +91,6 @@ class TrafficAggregator:
 
         self._interface_name = ""
         self._local_ip = ""
-
         self._started_at: datetime | None = None
 
     def start(
@@ -105,7 +101,6 @@ class TrafficAggregator:
         with self._lock:
             self._interface_name = interface_name
             self._local_ip = local_ip
-
             self._buckets.clear()
 
             self._started_at = datetime.now(
@@ -140,11 +135,9 @@ class TrafficAggregator:
             self._local_ip,
         )
 
-        timestamp = datetime.now(timezone.utc)
-
-        timestamp = timestamp.replace(
-            microsecond=0
-        )
+        timestamp = datetime.now(
+            timezone.utc
+        ).replace(microsecond=0)
 
         with self._lock:
             bucket = self._get_or_create_bucket(
@@ -189,11 +182,13 @@ class TrafficAggregator:
         self,
         window_seconds: int = 60,
     ) -> dict[str, Any]:
-        if window_seconds < 1:
-            window_seconds = 1
-
-        if window_seconds > self._max_history_seconds:
-            window_seconds = self._max_history_seconds
+        window_seconds = max(
+            1,
+            min(
+                window_seconds,
+                self._max_history_seconds,
+            ),
+        )
 
         now = datetime.now(timezone.utc)
 
@@ -230,43 +225,108 @@ class TrafficAggregator:
                 buckets
             )
 
-            timeseries = [
-                {
-                    "timestamp": bucket.timestamp,
-                    "packets": bucket.packets,
-                    "bytes": bucket.bytes,
-                }
-                for bucket in buckets
-            ]
-
-            captured_seconds = max(
-                1,
-                len(buckets),
+            upload_counter = directions.get(
+                "outbound",
+                TrafficCounter(),
             )
+
+            download_counter = directions.get(
+                "inbound",
+                TrafficCounter(),
+            )
+
+            # Use the actual elapsed observation time where possible.
+            if buckets:
+                first_timestamp = buckets[0].timestamp
+                last_timestamp = buckets[-1].timestamp
+
+                elapsed_seconds = (
+                    last_timestamp - first_timestamp
+                ).total_seconds() + 1.0
+
+                captured_seconds = max(
+                    1.0,
+                    min(
+                        float(window_seconds),
+                        elapsed_seconds,
+                    ),
+                )
+            else:
+                captured_seconds = 1.0
+
+            upload_mbps = (
+                upload_counter.bytes
+                * 8
+                / captured_seconds
+                / 1_000_000
+            )
+
+            download_mbps = (
+                download_counter.bytes
+                * 8
+                / captured_seconds
+                / 1_000_000
+            )
+
+            packets_per_second = (
+                total_packets
+                / captured_seconds
+            )
+
+            bytes_per_second = (
+                total_bytes
+                / captured_seconds
+            )
+
+            timeseries = []
+
+            for bucket in buckets:
+                upload_bytes = bucket.directions.get(
+                    "outbound",
+                    TrafficCounter(),
+                ).bytes
+
+                download_bytes = bucket.directions.get(
+                    "inbound",
+                    TrafficCounter(),
+                ).bytes
+
+                timeseries.append(
+                    {
+                        "timestamp": bucket.timestamp,
+                        "packets": bucket.packets,
+                        "bytes": bucket.bytes,
+                        "upload_bytes": upload_bytes,
+                        "download_bytes": download_bytes,
+                    }
+                )
 
             return {
                 "interface_name": self._interface_name,
                 "local_ip": self._local_ip,
                 "started_at": self._started_at,
                 "timestamp": now,
+
                 "window_seconds": window_seconds,
-                "captured_seconds": captured_seconds,
-                "total_packets": total_packets,
+                "captured_seconds": int(
+                    captured_seconds
+                ),
+
+                "bytes_sent": upload_counter.bytes,
+                "bytes_received": download_counter.bytes,
+
+                "packets_sent": upload_counter.packets,
+                "packets_received": download_counter.packets,
+
                 "total_bytes": total_bytes,
-                "packets_per_second": (
-                    total_packets / captured_seconds
-                ),
-                "bytes_per_second": (
-                    total_bytes / captured_seconds
-                ),
-                "upload_bytes": directions.get(
-                    "outbound",
-                    TrafficCounter(),
-                ).bytes,
-                "download_bytes": directions.get(
-                    "inbound",
-                    TrafficCounter(),
-                ).bytes,
+                "total_packets": total_packets,
+
+                "upload_mbps": upload_mbps,
+                "download_mbps": download_mbps,
+
+                "packets_per_second": packets_per_second,
+                "bytes_per_second": bytes_per_second,
+
                 "protocols": [
                     {
                         "protocol": protocol,
@@ -280,6 +340,7 @@ class TrafficAggregator:
                         reverse=True,
                     )
                 ],
+
                 "directions": [
                     {
                         "direction": direction,
@@ -293,6 +354,7 @@ class TrafficAggregator:
                         reverse=True,
                     )
                 ],
+
                 "peers": [
                     {
                         "ip_address": peer_ip,
@@ -307,6 +369,7 @@ class TrafficAggregator:
                         reverse=True,
                     )[:10]
                 ],
+
                 "timeseries": timeseries,
             }
 
