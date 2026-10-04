@@ -8,12 +8,15 @@ export interface HealthResponse {
 }
 
 export class ApiError extends Error {
+  readonly statusCode?: number;
+
   constructor(
     message: string,
-    public readonly statusCode?: number,
+    statusCode?: number,
   ) {
     super(message);
     this.name = "ApiError";
+    this.statusCode = statusCode;
   }
 }
 

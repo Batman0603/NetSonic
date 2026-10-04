@@ -142,15 +142,10 @@ export function TopologyView({
             "background-color": "#ffffff",
             width: 150,
             height: 64,
-            padding: 8,
+            padding: "8px",
             "border-width": 1,
             "border-color": "#b8c2cc",
             "overlay-opacity": 0,
-            "shadow-blur": 10,
-            "shadow-color": "#64748b",
-            "shadow-opacity": 0.12,
-            "shadow-offset-x": 0,
-            "shadow-offset-y": 3,
           },
         },
 
@@ -201,9 +196,6 @@ export function TopologyView({
           style: {
             "border-width": 3,
             "border-color": "#2563eb",
-            "shadow-blur": 18,
-            "shadow-color": "#2563eb",
-            "shadow-opacity": 0.2,
           },
         },
 

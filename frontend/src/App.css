@@ -148,6 +148,24 @@ button:disabled {
   gap: 16px;
 }
 
+.learn-nav-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 14px;
+  border: 1px solid #d2dce2;
+  border-radius: 7px;
+  background: white;
+  color: #263641;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.learn-nav-link:hover {
+  border-color: #00aeca;
+  color: #008ca6;
+}
+
 .monitor-status {
   display: inline-flex;
   align-items: center;

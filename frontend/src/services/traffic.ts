@@ -23,6 +23,8 @@ export interface TrafficTimePoint {
   timestamp: string;
   packets: number;
   bytes: number;
+  upload_bytes?: number;
+  download_bytes?: number;
 }
 
 export interface TrafficSnapshot {
@@ -44,6 +46,9 @@ export interface TrafficSnapshot {
   upload_bytes: number;
   download_bytes: number;
 
+  upload_mbps?: number;
+  download_mbps?: number;
+
   protocols: TrafficProtocolStat[];
 
   directions: TrafficDirectionStat[];
@@ -56,6 +61,8 @@ export interface TrafficSnapshot {
 export interface TrafficStatus {
   running: boolean;
   interface_name: string | null;
+  local_ip?: string | null;
+  started_at?: string | null;
   last_error: string | null;
 }
 
@@ -91,20 +98,24 @@ async function request(
 export async function startTrafficMonitoring(
   interfaceName: string,
 ): Promise<void> {
-  if (!interfaceName.trim()) {
+  const cleanInterface = interfaceName.trim();
+
+  if (!cleanInterface) {
     throw new Error(
       "A network interface must be selected.",
     );
   }
 
-  const params = new URLSearchParams({
-    interface_name: interfaceName,
-  });
-
   const response = await request(
-    `${API_BASE_URL}/traffic/start?${params.toString()}`,
+    `${API_BASE_URL}/traffic/start`,
     {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        interface_name: cleanInterface,
+      }),
     },
   );
 
@@ -154,8 +165,16 @@ export async function getTrafficSnapshot(
   interfaceName: string,
   windowSeconds = 60,
 ): Promise<TrafficSnapshot> {
+  const cleanInterface = interfaceName.trim();
+
+  if (!cleanInterface) {
+    throw new Error(
+      "A network interface must be selected.",
+    );
+  }
+
   const params = new URLSearchParams({
-    interface_name: interfaceName,
+    interface_name: cleanInterface,
     window_seconds: String(windowSeconds),
   });
 

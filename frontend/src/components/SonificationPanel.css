@@ -501,3 +501,318 @@
 .network-spectrum {
   margin-top: 10px;
 }
+
+/* Current compact sonification panel layout. */
+.sonification-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid #dfe4ea;
+  border-radius: 6px;
+  background: #fafbfc;
+  color: #536170;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.status-indicator,
+.live-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+  background: #9aa4ae;
+}
+
+.status-online-indicator,
+.live-dot:not(.inactive) {
+  background: #2e9b62;
+  box-shadow: 0 0 0 3px rgba(46, 155, 98, 0.12);
+}
+
+.sonification-controls > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sonification-interface-label {
+  color: #7a838d;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.sonification-controls > div:first-child strong {
+  color: #25303a;
+  font-size: 14px;
+}
+
+.sonification-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.sonification-button {
+  min-width: 120px;
+  padding: 10px 15px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 750;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.sonification-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.sonification-button:disabled {
+  opacity: 0.5;
+}
+
+.sonification-button-primary {
+  background: #1769aa;
+}
+
+.sonification-button-primary:hover:not(:disabled) {
+  background: #12558b;
+}
+
+.sonification-button-danger {
+  background: #b43b3b;
+}
+
+.sonification-visualizer-card {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid #dfe4ea;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: var(--ns-shadow, 0 2px 8px rgb(31 41 55 / 6%));
+}
+
+.sonification-visualizer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.sonification-visualizer-header > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sonification-visualizer-header > div:first-child span {
+  color: #71808b;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.sonification-visualizer-header > div:first-child strong {
+  color: #25303a;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.sonification-live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #78828c;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+}
+
+.audio-visualizer {
+  width: 100%;
+  height: 260px;
+  overflow: hidden;
+  border: 1px solid #1b333c;
+  border-radius: 5px;
+  background: #050b0f;
+}
+
+.audio-visualizer canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sonification-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.sonification-metric {
+  display: flex;
+  min-width: 0;
+  min-height: 68px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 12px;
+  border: 1px solid #e3e7eb;
+  border-radius: 5px;
+  background: #ffffff;
+}
+
+.sonification-metric span {
+  color: #7a838d;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.sonification-metric strong {
+  overflow: hidden;
+  color: #25303a;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sonification-client-count {
+  padding-left: 8px;
+  border-left: 1px solid #dfe4ea;
+  color: #7a838d;
+  font-size: 9px;
+}
+
+.sonification-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.sonification-sound-guide {
+  margin-top: 10px;
+  padding: 14px;
+  border: 1px solid #dfe5e9;
+  border-radius: 6px;
+  background: #f7f9fa;
+}
+
+.sonification-sound-guide-heading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-bottom: 10px;
+}
+
+.sonification-sound-guide-heading > span {
+  color: #465661;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.sonification-sound-guide-heading small {
+  color: #77848d;
+  font-size: 11px;
+}
+
+.sonification-sound-guide-items {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.sonification-sound-guide-item {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+  padding: 9px;
+  border-left: 2px solid #13a8bc;
+  background: #ffffff;
+}
+
+.sonification-sound-guide-item strong {
+  color: #34434d;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}
+
+.sonification-sound-guide-item span {
+  color: #71808a;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.sonification-summary-card {
+  display: flex;
+  min-width: 0;
+  min-height: 64px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 12px;
+  border: 1px solid #e3e7eb;
+  border-radius: 5px;
+  background: #ffffff;
+}
+
+.sonification-summary-card span {
+  color: #7a838d;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.sonification-summary-card strong {
+  overflow: hidden;
+  color: #25303a;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .sonification-panel {
+    padding: 18px;
+  }
+
+  .sonification-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .sonification-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sonification-button {
+    width: 100%;
+  }
+
+  .sonification-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sonification-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sonification-sound-guide-items {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .audio-visualizer {
+    height: 220px;
+  }
+}
