@@ -564,3 +564,231 @@ select:focus-visible {
     animation-iteration-count: 1 !important;
   }
 }
+/* =========================================================
+   Phase 2 - Network Topology
+   ========================================================= */
+
+.topology-interface-selector {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 360px);
+  align-items: center;
+  gap: 24px;
+  margin-top: 28px;
+  padding: 22px 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 3%),
+    0 8px 24px rgb(15 23 42 / 3%);
+}
+
+.topology-interface-selector h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 750;
+}
+
+.topology-interface-selector p:not(.eyebrow) {
+  margin: 6px 0 0;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.topology-interface-selector select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #ffffff;
+  color: var(--color-text);
+  font: inherit;
+}
+
+.topology-interface-selector select:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(79 70 229 / 12%);
+}
+
+.topology-section {
+  margin-top: 28px;
+  padding: clamp(20px, 3vw, 30px);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 3%),
+    0 12px 32px rgb(15 23 42 / 4%);
+}
+
+.topology-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.topology-header h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.35rem;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+}
+
+.topology-description {
+  max-width: 700px;
+  margin: 8px 0 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.topology-summary {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.topology-stat {
+  min-width: 0;
+  padding: 13px 14px;
+  border: 1px solid #e8edf5;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.topology-stat span {
+  display: block;
+  margin-bottom: 5px;
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.topology-stat strong {
+  display: block;
+  overflow: hidden;
+  color: #1e293b;
+  font-size: 0.83rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topology-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin: 20px 0 12px;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.topology-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  display: inline-block;
+  border-radius: 50%;
+}
+
+.legend-local {
+  background: #4f46e5;
+}
+
+.legend-gateway {
+  background: #0f766e;
+}
+
+.legend-device {
+  background: #64748b;
+}
+
+.topology-canvas {
+  width: 100%;
+  height: 560px;
+  margin-top: 8px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background:
+    radial-gradient(
+      circle at 1px 1px,
+      #e2e8f0 1px,
+      transparent 0
+    );
+  background-size: 24px 24px;
+}
+
+.topology-loading {
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.topology-note {
+  margin: 12px 0 0;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+/* =========================================================
+   Responsive topology layout
+   ========================================================= */
+
+@media (max-width: 1100px) {
+  .topology-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .topology-interface-selector {
+    grid-template-columns: 1fr;
+  }
+
+  .topology-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .topology-header .secondary-button {
+    width: 100%;
+  }
+
+  .topology-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .topology-canvas {
+    height: 450px;
+  }
+}
+
+@media (max-width: 480px) {
+  .topology-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .topology-canvas {
+    height: 400px;
+  }
+}

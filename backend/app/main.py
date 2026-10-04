@@ -10,6 +10,7 @@ from app.api.interfaces import router as interfaces_router
 
 from app.core.logging_config import configure_logging
 from app.db.session import Base, engine
+from app.api.topology import router as topology_router
 
 # Ensure SQLAlchemy registers the Device model before creating tables.
 from app.models.device import Device  # noqa: F401
@@ -84,6 +85,12 @@ app.include_router(
     devices_router,
     prefix="/api",
     tags=["Devices"],
+)
+
+app.include_router(
+    topology_router,
+    prefix="/api",
+    tags=["Topology"],
 )
 
 
