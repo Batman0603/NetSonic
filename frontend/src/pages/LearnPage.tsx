@@ -591,6 +591,11 @@ function LearnPage() {
               />
 
               <InfoCard
+                title="Spectrogram"
+                description="Shows how frequency content changes over time."
+              />
+
+              <InfoCard
                 title="Filled Waveform"
                 description="Displays the amplitude envelope as a filled audio waveform."
               />
@@ -907,6 +912,7 @@ function Faq({
   answer: string;
 }) {
   return (
+    
     <details className="learn-faq-item">
       <summary>{question}</summary>
       <p>{answer}</p>
