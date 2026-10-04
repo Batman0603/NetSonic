@@ -13,6 +13,12 @@ import {
   type SonificationStatus,
   type SonificationUpdate,
 } from "../services/sonification";
+import {
+  DrumMachine,
+  ElectricPiano,
+  Soundfont,
+  type Smplr,
+} from "smplr";
 
 import { AudioVisualizer } from "./AudioVisualizer";
 import { NetworkSpectrum } from "./NetworkSpectrum";
@@ -29,29 +35,21 @@ interface SonificationPanelProps {
   interfaceName: string;
 }
 
-interface AudioVoice {
-  oscillator: OscillatorNode;
-  gain: GainNode;
-  panner: StereoPannerNode;
-  filter: BiquadFilterNode;
-}
+type SoundInstrument = "keyboard" | "piano" | "flute" | "guitar" | "drums";
+
+const SOUND_INSTRUMENTS: { value: SoundInstrument; label: string }[] = [
+  { value: "keyboard", label: "Wurlitzer Keyboard" },
+  { value: "piano", label: "Acoustic Piano" },
+  { value: "flute", label: "Flute" },
+  { value: "guitar", label: "Nylon Guitar" },
+  { value: "drums", label: "TR-808 Drums" },
+];
 
 const MASTER_VOLUME = 0.8;
 
-const MUSICAL_SCALE = [
-  261.63,
-  293.66,
-  329.63,
-  392.0,
-  440.0,
-  523.25,
-  587.33,
-  659.25,
-  783.99,
-  880.0,
-];
-
-const MELODY_STEPS = [0, 2, 3, 2, 1, 2, 3, 0];
+const PENTATONIC_MIDI = [60, 62, 64, 67, 69, 72, 74, 76, 79, 81];
+const MELODY_STEPS = [0, 2, 4, 2, 1, 2, 4, 0];
+const NOTE_NAMES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
 
 function clamp(
   value: number,
@@ -62,6 +60,33 @@ function clamp(
     minimum,
     Math.min(value, maximum),
   );
+}
+
+function getDirectionPan(direction: string): number {
+  switch (direction.toLowerCase()) {
+    case "inbound": return -0.75;
+    case "outbound": return 0.75;
+    default: return 0;
+  }
+}
+
+function midiNoteName(note: number): string {
+  return `${NOTE_NAMES[note % 12]}${Math.floor(note / 12) - 1}`;
+}
+
+function getNoteFromTrafficPitch(pitchHz: number, phrasePosition: number): number {
+  const midiPitch = 69 + 12 * Math.log2(clamp(pitchHz, 220, 880) / 440);
+  const rootIndex = PENTATONIC_MIDI.reduce(
+    (best, note, index) => Math.abs(note - midiPitch) < Math.abs(PENTATONIC_MIDI[best] - midiPitch) ? index : best,
+    0,
+  );
+  const phraseIndex = rootIndex + MELODY_STEPS[phrasePosition];
+  return PENTATONIC_MIDI[phraseIndex % PENTATONIC_MIDI.length]
+    + 12 * Math.floor(phraseIndex / PENTATONIC_MIDI.length);
+}
+
+function getTempoFromPacketRate(packetsPerSecond: number): number {
+  return Math.round(clamp(76 + Math.log2(1 + Math.max(0, packetsPerSecond)) * 17, 76, 165));
 }
 
 function formatBytes(bytes: number): string {
@@ -79,205 +104,6 @@ function formatBytes(bytes: number): string {
   }
 
   return `${value.toFixed(2)} ${units[unitIndex]}`;
-}
-
-function getMusicalFrequency(
-  pitchHz: number,
-  intensity: number,
-): number {
-  const safePitch =
-    clamp(
-      pitchHz,
-      220,
-      880,
-    );
-
-  const nearest =
-    MUSICAL_SCALE.reduce(
-      (
-        previous,
-        current,
-      ) => {
-        return Math.abs(
-          current -
-            safePitch,
-        ) <
-          Math.abs(
-            previous -
-              safePitch,
-          )
-          ? current
-          : previous;
-      },
-    );
-
-  const octaveBoost =
-    intensity > 0.75
-      ? 2
-      : intensity > 0.45
-        ? 1
-        : 1;
-
-  return nearest *
-    octaveBoost;
-}
-
-function getFifthFrequency(
-  pitchHz: number,
-  intensity: number,
-): number {
-  const root = getMusicalFrequency(pitchHz, intensity);
-  const rootIndex = MUSICAL_SCALE.reduce(
-    (nearestIndex, note, index) =>
-      Math.abs(note - root) < Math.abs(MUSICAL_SCALE[nearestIndex] - root)
-        ? index
-        : nearestIndex,
-    0,
-  );
-  const degree = rootIndex % 5;
-  const octave = Math.floor(rootIndex / 5);
-  const fifthDegree = degree + 3;
-  const fifthNote = MUSICAL_SCALE[fifthDegree % 5];
-
-  return fifthNote * 2 ** (octave + (fifthDegree >= 5 ? 1 : 0));
-}
-
-function createPianoWave(
-  context: AudioContext,
-  protocol: string,
-): PeriodicWave {
-  const harmonicsByProtocol: Record<string, number[]> = {
-    TCP: [1, 0.42, 0.22, 0.12, 0.075, 0.05, 0.035, 0.025, 0.018, 0.014, 0.011, 0.008, 0.006, 0.004, 0.003, 0.002],
-    UDP: [1, 0.58, 0.36, 0.24, 0.16, 0.11, 0.075, 0.052, 0.038, 0.028, 0.021, 0.016, 0.012, 0.009, 0.007, 0.005],
-    ICMP: [1, 0.3, 0.2, 0.13, 0.09, 0.06, 0.042, 0.03, 0.022, 0.017, 0.013, 0.01, 0.007, 0.005, 0.004, 0.003],
-  };
-  const harmonics = harmonicsByProtocol[protocol.toUpperCase()] ??
-    [1, 0.38, 0.2, 0.12, 0.075, 0.05, 0.035, 0.025, 0.018, 0.014, 0.01, 0.007, 0.005, 0.004, 0.003, 0.002];
-  const real = new Float32Array(harmonics.length + 1);
-  const imaginary = new Float32Array(harmonics.length + 1);
-
-  harmonics.forEach((amplitude, index) => {
-    imaginary[index + 1] = amplitude;
-  });
-
-  return context.createPeriodicWave(real, imaginary);
-}
-
-function getDirectionPan(
-  direction: string,
-): number {
-  const normalized =
-    direction.toLowerCase();
-
-  if (
-    normalized ===
-    "inbound"
-  ) {
-    return -0.75;
-  }
-
-  if (
-    normalized ===
-    "outbound"
-  ) {
-    return 0.75;
-  }
-
-  if (
-    normalized ===
-    "local"
-  ) {
-    return 0;
-  }
-
-  return 0;
-}
-
-function createVoice(
-  context: AudioContext,
-  destination: AudioNode,
-): AudioVoice {
-  const oscillator =
-    context.createOscillator();
-
-  const gain =
-    context.createGain();
-
-  const panner =
-    context.createStereoPanner();
-
-  const filter =
-    context.createBiquadFilter();
-
-  filter.type =
-    "lowpass";
-
-  filter.frequency.value =
-    3200;
-
-  filter.Q.value =
-    0.8;
-
-  oscillator.connect(
-    filter,
-  );
-
-  filter.connect(
-    gain,
-  );
-
-  gain.connect(
-    panner,
-  );
-
-  panner.connect(
-    destination,
-  );
-
-  gain.gain.value =
-    0;
-
-  oscillator.start();
-
-  return {
-    oscillator,
-    gain,
-    panner,
-    filter,
-  };
-}
-
-function stopVoice(
-  context: AudioContext,
-  voice: AudioVoice | null,
-): void {
-  if (!voice) {
-    return;
-  }
-
-  const now =
-    context.currentTime;
-
-  voice.gain.gain.cancelScheduledValues(
-    now,
-  );
-
-  voice.gain.gain.setTargetAtTime(
-    0,
-    now,
-    0.08,
-  );
-
-  window.setTimeout(
-    () => {
-      try {
-        voice.oscillator.stop();
-      } catch {
-        // Oscillator may already be stopped.
-      }
-    },
-    500,
-  );
 }
 
 export function SonificationPanel({
@@ -406,20 +232,13 @@ export function SonificationPanel({
       null,
     );
 
-  const uploadVoiceRef =
-    useRef<AudioVoice | null>(
-      null,
-    );
-
-  const downloadVoiceRef =
-    useRef<AudioVoice | null>(
-      null,
-    );
-
-  const ambientVoiceRef =
-    useRef<AudioVoice | null>(
-      null,
-    );
+  const instrumentPlayersRef = useRef(new Map<SoundInstrument, Smplr>());
+  const instrumentLoadsRef = useRef(new Map<SoundInstrument, Promise<Smplr>>());
+  const drumMachineRef = useRef<ReturnType<typeof DrumMachine> | null>(null);
+  const drumMappingErrorRef = useRef(false);
+  const [instrumentLoading, setInstrumentLoading] = useState(false);
+  const [sampleLoadProgress, setSampleLoadProgress] = useState({ loaded: 0, total: 0 });
+  const loadingInstrumentRef = useRef<SoundInstrument | null>(null);
 
   const websocketRef =
     useRef<WebSocket | null>(
@@ -436,11 +255,24 @@ export function SonificationPanel({
       null,
     );
 
+  const latestPacketRateRef = useRef(0);
+  const lastTrafficUpdateAtRef = useRef(0);
+  const [playedNote, setPlayedNote] = useState<{ note: string; velocity: number; bpm: number } | null>(null);
+
   const audioEnabledRef =
     useRef(false);
 
   const melodyStepRef =
     useRef(0);
+
+  const [instrument, setInstrument] = useState<SoundInstrument>(() => {
+    const saved = localStorage.getItem("netsonic.sound.instrument");
+    return SOUND_INSTRUMENTS.some((item) => item.value === saved)
+      ? (saved as SoundInstrument)
+      : "piano";
+  });
+
+  const instrumentRef = useRef<SoundInstrument>(instrument);
 
   const handleVisualizerStyleChange =
     useCallback(
@@ -600,34 +432,15 @@ export function SonificationPanel({
 
         disconnectWebSocket();
 
-        const context =
-          audioContextRef.current;
+        const context = audioContextRef.current;
+        for (const player of instrumentPlayersRef.current.values()) {
+          player.dispose();
+        }
+        drumMachineRef.current = null;
+        instrumentPlayersRef.current.clear();
+        instrumentLoadsRef.current.clear();
 
         if (context) {
-          stopVoice(
-            context,
-            uploadVoiceRef.current,
-          );
-
-          stopVoice(
-            context,
-            downloadVoiceRef.current,
-          );
-
-          stopVoice(
-            context,
-            ambientVoiceRef.current,
-          );
-
-          uploadVoiceRef.current =
-            null;
-
-          downloadVoiceRef.current =
-            null;
-
-          ambientVoiceRef.current =
-            null;
-
           try {
             await context.close();
           } catch {
@@ -745,33 +558,6 @@ export function SonificationPanel({
 
         await context.resume();
 
-        const uploadVoice =
-          createVoice(
-            context,
-            compressor,
-          );
-
-        const downloadVoice =
-          createVoice(
-            context,
-            compressor,
-          );
-
-        const ambientVoice =
-          createVoice(
-            context,
-            compressor,
-          );
-
-        uploadVoiceRef.current =
-          uploadVoice;
-
-        downloadVoiceRef.current =
-          downloadVoice;
-
-        ambientVoiceRef.current =
-          ambientVoice;
-
         audioContextRef.current =
           context;
 
@@ -788,154 +574,85 @@ export function SonificationPanel({
       [],
     );
 
-  const updateContinuousVoices =
-    useCallback(
-      (
-        parameters: SonificationParameters,
-      ) => {
-        const context =
-          audioContextRef.current;
+  const loadInstrument = useCallback((selected: SoundInstrument): Promise<Smplr> => {
+    const existing = instrumentPlayersRef.current.get(selected);
+    if (existing) return Promise.resolve(existing);
 
-        if (!context) {
-          return;
-        }
+    const inProgress = instrumentLoadsRef.current.get(selected);
+    if (inProgress) return inProgress;
 
-        const now =
-          context.currentTime;
+    const context = audioContextRef.current;
+    const destination = compressorRef.current;
+    if (!context || !destination) {
+      return Promise.reject(new Error("Audio engine is not ready."));
+    }
 
-        const intensity =
-          clamp(
-            parameters.intensity,
-            0,
-            1,
-          );
+    const notesToLoad = {
+      notes: [60, 62, 64, 67, 69, 72, 74, 76, 79],
+      fallback: "nearest" as const,
+    };
+    loadingInstrumentRef.current = selected;
+    setSampleLoadProgress({ loaded: 0, total: 0 });
+    const onLoadProgress = ({ loaded, total }: { loaded: number; total: number }) => {
+      if (loadingInstrumentRef.current === selected) {
+        setSampleLoadProgress({ loaded, total });
+      }
+    };
 
-        const musicalFrequency =
-          getMusicalFrequency(
-            parameters.pitch_hz,
-            intensity,
-          );
+    const player: Smplr = selected === "drums"
+      ? DrumMachine(context, {
+          instrument: "TR-808",
+          destination,
+          volume: 108,
+          onLoadProgress,
+        })
+      : selected === "keyboard"
+        ? ElectricPiano(context, {
+            instrument: "WurlitzerEP200",
+            destination,
+            volume: 108,
+            notesToLoad,
+            onLoadProgress,
+          })
+        : Soundfont(context, {
+            instrument: selected === "flute"
+              ? "flute"
+              : selected === "guitar"
+                ? "acoustic_guitar_nylon"
+                : "acoustic_grand_piano",
+            kit: "FluidR3_GM",
+            destination,
+            volume: 108,
+            notesToLoad,
+            onLoadProgress,
+          });
 
-        // Silence the continuous tones; the sequenced piano notes carry the sound.
-        const baseVolume = 0;
+    if (selected === "drums") {
+      drumMachineRef.current = player as ReturnType<typeof DrumMachine>;
+    }
 
-        const upload =
-          uploadVoiceRef.current;
+    const loading = player.ready.then(() => {
+      instrumentPlayersRef.current.set(selected, player);
+      if (loadingInstrumentRef.current === selected) {
+        setSampleLoadProgress({ loaded: 1, total: 1 });
+      }
+      return player;
+    }).catch((loadError: unknown) => {
+      player.dispose();
+      const message = loadError instanceof Error
+        ? loadError.message
+        : "Unable to load the selected instrument samples.";
+      throw new Error(`Could not load ${selected} samples: ${message}`);
+    }).finally(() => {
+      instrumentLoadsRef.current.delete(selected);
+      if (loadingInstrumentRef.current === selected) {
+        loadingInstrumentRef.current = null;
+      }
+    });
 
-        const download =
-          downloadVoiceRef.current;
-
-        const ambient =
-          ambientVoiceRef.current;
-
-        /*
-         * Upload voice.
-         */
-        if (upload) {
-          upload.oscillator.type =
-            "sine";
-
-          upload.oscillator.frequency.cancelScheduledValues(
-            now,
-          );
-
-          upload.oscillator.frequency.setTargetAtTime(
-            getFifthFrequency(parameters.pitch_hz, intensity),
-            now,
-            0.08,
-          );
-
-          upload.panner.pan.setTargetAtTime(
-            0.78,
-            now,
-            0.08,
-          );
-
-          upload.filter.frequency.setTargetAtTime(
-            900 + intensity * 1600,
-            now,
-            0.08,
-          );
-
-          upload.gain.gain.setTargetAtTime(
-            baseVolume *
-              0.55,
-            now,
-            0.08,
-          );
-        }
-
-        /*
-         * Download voice.
-         */
-        if (download) {
-          download.oscillator.type =
-            "sine";
-
-          download.oscillator.frequency.cancelScheduledValues(
-            now,
-          );
-
-          download.oscillator.frequency.setTargetAtTime(
-            musicalFrequency,
-            now,
-            0.08,
-          );
-
-          download.panner.pan.setTargetAtTime(
-            -0.78,
-            now,
-            0.08,
-          );
-
-          download.filter.frequency.setTargetAtTime(
-            800 + intensity * 1800,
-            now,
-            0.08,
-          );
-
-          download.gain.gain.setTargetAtTime(
-            baseVolume,
-            now,
-            0.08,
-          );
-        }
-
-        /*
-         * Ambient network bed.
-         */
-        if (ambient) {
-          ambient.oscillator.type =
-            "sine";
-
-          ambient.oscillator.frequency.setTargetAtTime(
-            musicalFrequency /
-              2,
-            now,
-            0.12,
-          );
-
-          ambient.panner.pan.setTargetAtTime(
-            0,
-            now,
-            0.12,
-          );
-
-          ambient.filter.frequency.setTargetAtTime(
-            650 + intensity * 850,
-            now,
-            0.12,
-          );
-
-          ambient.gain.gain.setTargetAtTime(
-            0,
-            now,
-            0.12,
-          );
-        }
-      },
-      [],
-    );
+    instrumentLoadsRef.current.set(selected, loading);
+    return loading;
+  }, []);
 
   const triggerPulse =
     useCallback(
@@ -957,8 +674,12 @@ export function SonificationPanel({
           return;
         }
 
-        const now =
-          context.currentTime;
+        const packetsPerSecond = latestPacketRateRef.current;
+        const updateIsFresh = Date.now() - lastTrafficUpdateAtRef.current < 3000;
+        if (packetsPerSecond <= 0 || !updateIsFresh) {
+          setPlayedNote(null);
+          return;
+        }
 
         const intensity =
           clamp(
@@ -967,119 +688,63 @@ export function SonificationPanel({
             1,
           );
 
-        if (intensity < 0.015) {
+        const phrasePosition = melodyStepRef.current % MELODY_STEPS.length;
+        const selectedInstrument = instrumentRef.current;
+        const player = instrumentPlayersRef.current.get(selectedInstrument);
+        if (!player) return;
+
+        player.output.pan = getDirectionPan(parameters.direction);
+
+        const velocity = Math.round(clamp(82 + Math.sqrt(intensity) * 40, 82, 120));
+        const bpm = getTempoFromPacketRate(packetsPerSecond);
+
+        if (selectedInstrument === "drums") {
+          const drumPlayer = drumMachineRef.current;
+          if (!drumPlayer) return;
+
+          const groups = drumPlayer.getGroupNames();
+          const desired = phrasePosition % 4 === 0
+            ? ["kick", "bass"]
+            : phrasePosition % 4 === 2
+              ? ["snare", "clap"]
+              : ["closedhihat", "closedhat", "hat", "cymbal"];
+          const group = groups.find((name) => {
+            const normalized = name.toLowerCase().replace(/[^a-z]/g, "");
+            return desired.some((part) => normalized.includes(part));
+          });
+          if (!group) {
+            if (!drumMappingErrorRef.current) {
+              setError(`Drum kit is missing a ${desired[0]} sample. Available groups: ${groups.join(", ") || "none"}.`);
+              drumMappingErrorRef.current = true;
+            }
+            return;
+          }
+          drumMappingErrorRef.current = false;
+          try {
+            drumPlayer.start({ note: group, time: context.currentTime, velocity });
+          } catch (audioError) {
+            setError(audioError instanceof Error ? audioError.message : "Unable to play the selected drum sample.");
+            return;
+          }
+          melodyStepRef.current += 1;
+          setPlayedNote({ note: group, velocity, bpm });
           return;
         }
 
-        const phrasePosition = melodyStepRef.current % MELODY_STEPS.length;
-        const melodyOffset = MELODY_STEPS[phrasePosition];
-        const frequency = Math.min(
-          1320,
-          MUSICAL_SCALE[melodyOffset] *
-            (intensity > 0.72 ? 2 : 1),
-        );
+        const midiNote = getNoteFromTrafficPitch(parameters.pitch_hz, phrasePosition);
+        try {
+          player.start({
+            note: midiNote,
+            time: context.currentTime,
+            velocity,
+            duration: 30 / bpm * 0.9,
+          });
+        } catch (audioError) {
+          setError(audioError instanceof Error ? audioError.message : `Unable to play the selected ${selectedInstrument} sample.`);
+          return;
+        }
         melodyStepRef.current += 1;
-
-        // Use an audible floor so light traffic such as a ping is still
-        // heard. Raise the note level smoothly with traffic intensity.
-        const volume = clamp(
-          0.055 + Math.sqrt(intensity) * 0.12,
-          0.055,
-          0.175,
-        );
-        const accent = phrasePosition === 0 ? 1 : 0.78;
-
-        const direction =
-          parameters.direction.toLowerCase();
-
-        const pan =
-          getDirectionPan(
-            direction,
-          );
-
-        const oscillator =
-          context.createOscillator();
-
-        const gain =
-          context.createGain();
-
-        const panner =
-          context.createStereoPanner();
-
-        const filter =
-          context.createBiquadFilter();
-
-        oscillator.setPeriodicWave(
-          createPianoWave(context, parameters.protocol),
-        );
-
-        oscillator.frequency.value =
-          frequency;
-
-        panner.pan.value =
-          pan;
-
-        filter.type =
-          "lowpass";
-
-        filter.frequency.value = 9000 + intensity * 4000;
-
-        filter.Q.value = 0.55;
-
-        oscillator.connect(
-          filter,
-        );
-
-        filter.connect(
-          gain,
-        );
-
-        gain.connect(
-          panner,
-        );
-
-        panner.connect(
-          compressorRef.current ??
-            context.destination,
-        );
-
-        const peak = clamp(volume * accent, 0.045, 0.175);
-
-        const attack =
-          0.008;
-
-        const decay = 0.58;
-
-        gain.gain.setValueAtTime(
-          0,
-          now,
-        );
-
-        gain.gain.linearRampToValueAtTime(
-          peak,
-          now +
-            attack,
-        );
-
-        gain.gain.exponentialRampToValueAtTime(
-          Math.max(0.001, peak * 0.58),
-          now + 0.14,
-        );
-
-        gain.gain.exponentialRampToValueAtTime(
-          0.001,
-          now +
-            decay,
-        );
-
-        oscillator.start(
-          now,
-        );
-
-        oscillator.stop(
-          now +
-            decay + 0.03,
-        );
+        setPlayedNote({ note: midiNoteName(midiNote), velocity, bpm });
       },
       [],
     );
@@ -1103,15 +768,16 @@ export function SonificationPanel({
               return;
             }
 
-            const trafficTempo = clamp(
-              (parameters.pulse_rate_hz - 0.5) / 7.5,
-              0,
-              1,
-            );
-            const beatsPerMinute = 100 + trafficTempo * 35;
+            const packetRate = latestPacketRateRef.current;
+            const freshTraffic = Date.now() - lastTrafficUpdateAtRef.current < 3000;
+            const beatsPerMinute = freshTraffic ? getTempoFromPacketRate(packetRate) : 76;
             const interval = 60_000 / beatsPerMinute / 2;
 
-            triggerPulse();
+            if (packetRate > 0 && freshTraffic) {
+              triggerPulse();
+            } else {
+              setPlayedNote(null);
+            }
 
             pulseTimerRef.current =
               window.setTimeout(
@@ -1139,15 +805,13 @@ export function SonificationPanel({
         latestParametersRef.current =
           update.parameters;
 
-        updateContinuousVoices(
-          update.parameters,
-        );
+        latestPacketRateRef.current = update.traffic.packets_per_second;
+        lastTrafficUpdateAtRef.current = Date.now();
 
         startPulseTimer();
       },
       [
         startPulseTimer,
-        updateContinuousVoices,
       ],
     );
 
@@ -1235,6 +899,10 @@ export function SonificationPanel({
            * user interaction.
            */
           await createAudioEngine();
+          setInstrumentLoading(true);
+          loadingInstrumentRef.current = instrumentRef.current;
+          await loadInstrument(instrumentRef.current);
+          setInstrumentLoading(false);
 
           /*
            * Traffic monitoring is already started
@@ -1260,6 +928,8 @@ export function SonificationPanel({
         } catch (
           audioError
         ) {
+          setInstrumentLoading(false);
+          loadingInstrumentRef.current = null;
           audioEnabledRef.current =
             false;
 
@@ -1276,6 +946,13 @@ export function SonificationPanel({
 
           const context =
             audioContextRef.current;
+
+          for (const player of instrumentPlayersRef.current.values()) {
+            player.dispose();
+          }
+          instrumentPlayersRef.current.clear();
+          instrumentLoadsRef.current.clear();
+          drumMachineRef.current = null;
 
           if (context) {
             try {
@@ -1303,6 +980,7 @@ export function SonificationPanel({
         connectWebSocket,
         createAudioEngine,
         interfaceName,
+        loadInstrument,
         updateStatus,
       ],
     );
@@ -1319,6 +997,13 @@ export function SonificationPanel({
 
         const context =
           audioContextRef.current;
+
+        for (const player of instrumentPlayersRef.current.values()) {
+          player.dispose();
+        }
+        instrumentPlayersRef.current.clear();
+        instrumentLoadsRef.current.clear();
+        drumMachineRef.current = null;
 
         if (context) {
           try {
@@ -1340,6 +1025,8 @@ export function SonificationPanel({
   const intensity =
     latestUpdate?.parameters
       .intensity ?? 0;
+  const packetsPerSecond = latestUpdate?.traffic.packets_per_second ?? 0;
+  const mappedTempo = getTempoFromPacketRate(packetsPerSecond);
   const protocols =
     latestUpdate?.protocols ?? [];
 
@@ -1417,7 +1104,7 @@ export function SonificationPanel({
       </div>
 
       <div className="sonification-controls">
-        <div>
+        <div className="sonification-interface-control">
           <span className="sonification-interface-label">
             INTERFACE
           </span>
@@ -1426,6 +1113,54 @@ export function SonificationPanel({
             {interfaceName || "No interface selected"}
           </strong>
         </div>
+
+        <label className="sonification-instrument-control">
+          <span>INSTRUMENT</span>
+          <select
+            value={instrument}
+            onChange={(event) => {
+              const nextInstrument = event.target.value as SoundInstrument;
+              instrumentRef.current = nextInstrument;
+              setInstrument(nextInstrument);
+              localStorage.setItem("netsonic.sound.instrument", nextInstrument);
+              setError(null);
+              setPlayedNote(null);
+              drumMappingErrorRef.current = false;
+              if (audioEnabledRef.current) {
+                setInstrumentLoading(true);
+                loadingInstrumentRef.current = nextInstrument;
+                void loadInstrument(nextInstrument)
+                  .catch((loadError: unknown) => {
+                    setError(loadError instanceof Error ? loadError.message : "Unable to load instrument samples.");
+                  })
+                  .finally(() => setInstrumentLoading(false));
+              }
+            }}
+            aria-label="Choose sonification instrument"
+          >
+            {SOUND_INSTRUMENTS.map((item) => (
+              <option key={item.value} value={item.value}>{item.label}</option>
+            ))}
+          </select>
+          <div className="instrument-load-status" aria-live="polite">
+            <small>
+              {instrumentLoading
+                ? `Loading ${SOUND_INSTRUMENTS.find((item) => item.value === instrument)?.label} samples${sampleLoadProgress.total > 0 ? ` · ${sampleLoadProgress.loaded}/${sampleLoadProgress.total}` : "…"}`
+                : instrumentPlayersRef.current.has(instrument)
+                  ? "Instrument samples ready"
+                  : "Samples load when audio starts"}
+            </small>
+            {instrumentLoading && (
+              <progress
+                className="instrument-load-progress"
+                max={sampleLoadProgress.total || 1}
+                value={sampleLoadProgress.total ? sampleLoadProgress.loaded : undefined}
+                aria-label="Instrument sample loading progress"
+              />
+            )}
+            <a href="/audio-credits.html" target="_blank" rel="noreferrer">Sample credits</a>
+          </div>
+        </label>
 
         <div className="sonification-actions">
           {!audioEnabled ? (
@@ -1538,10 +1273,43 @@ export function SonificationPanel({
         />
       )}
 
+      <div className="sonification-traffic-link" aria-live="polite">
+        <div className="sonification-traffic-link-heading">
+          <div>
+            <strong>LIVE TRAFFIC → SOUND</strong>
+            <span>Playback is driven by the latest packet capture, not a free-running melody.</span>
+          </div>
+          <span className={`traffic-playback-state ${playedNote ? "is-playing" : ""}`}>
+            {playedNote ? "PLAYING" : packetsPerSecond > 0 ? "WAITING FOR NOTE" : "NO PACKETS · SILENT"}
+          </span>
+        </div>
+        <div className="sonification-traffic-link-grid">
+          <div>
+            <span>PACKET RATE → TEMPO</span>
+            <strong>{packetsPerSecond.toFixed(1)} p/s · {mappedTempo} BPM</strong>
+          </div>
+          <div>
+            <span>TRAFFIC LOAD → PITCH</span>
+            <strong>{latestUpdate ? `${latestUpdate.parameters.pitch_hz.toFixed(0)} Hz → ${playedNote?.note ?? "next note"}` : "Waiting for traffic data"}</strong>
+          </div>
+          <div>
+            <span>INTENSITY → NOTE VELOCITY</span>
+            <strong>{playedNote ? `${Math.round(intensity * 100)}% · ${playedNote.velocity}/127` : `${Math.round(intensity * 100)}% · waiting`}</strong>
+          </div>
+          <div>
+            <span>LAST SOUND</span>
+            <strong>{playedNote?.note ?? "—"}</strong>
+          </div>
+        </div>
+        <small>
+          Notes stop when packet activity is zero or capture updates stop. Drums follow a fixed kick/snare/hi-hat pattern at the measured tempo.
+        </small>
+      </div>
+
       <div className="sonification-sound-guide" aria-label="Audio sound guide">
         <div className="sonification-sound-guide-heading">
           <span>WHAT YOU’RE HEARING</span>
-          <small>Short piano-like notes play a repeating C-major pentatonic melody at a steady musical tempo.</small>
+          <small>{instrument === "drums" ? "A sampled TR-808 kit marks traffic with a steady kick, snare, and hi-hat pattern." : `Sampled ${SOUND_INSTRUMENTS.find((item) => item.value === instrument)?.label} follows a repeating C-major pentatonic melody.`}</small>
         </div>
         <div className="sonification-sound-guide-items">
           <div className="sonification-sound-guide-item">
@@ -1554,15 +1322,15 @@ export function SonificationPanel({
           </div>
           <div className="sonification-sound-guide-item">
             <strong>PACKETS · MELODY</strong>
-            <span>Packet rate sets the tempo from 100 to 135 BPM; the melody stays on the beat.</span>
+            <span>Measured packets per second set the tempo from 76 to 165 BPM.</span>
           </div>
           <div className="sonification-sound-guide-item">
-            <strong>PROTOCOL · TIMBRE</strong>
-            <span>TCP is warm, UDP brighter, and ICMP rounder; other protocols use a balanced piano tone.</span>
+            <strong>PROTOCOL · ACTIVITY</strong>
+            <span>TCP, UDP, and ICMP protocol counts are shown in the live metrics.</span>
           </div>
           <div className="sonification-sound-guide-item">
             <strong>ACTIVITY · VOLUME</strong>
-            <span>Higher network activity makes each piano note louder. Local traffic stays centered.</span>
+            <span>Traffic intensity raises sampled note velocity. Local traffic stays centered.</span>
           </div>
         </div>
       </div>

@@ -97,10 +97,10 @@
 }
 
 .sonification-controls {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(170px, 220px) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
   margin-top: 22px;
   padding: 16px;
   border: 1px solid #e7ebef;
@@ -532,10 +532,11 @@
   box-shadow: 0 0 0 3px rgba(46, 155, 98, 0.12);
 }
 
-.sonification-controls > div:first-child {
+.sonification-interface-control {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .sonification-interface-label {
@@ -545,13 +546,93 @@
   letter-spacing: 0.12em;
 }
 
-.sonification-controls > div:first-child strong {
+.sonification-interface-control strong {
   color: #25303a;
   font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.sonification-instrument-control {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  color: #7a838d;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.sonification-instrument-control select {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 30px 9px 11px;
+  border: 1px solid #d6dfe7;
+  border-radius: 6px;
+  background: #fff;
+  color: #25303a;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: normal;
+}
+
+.instrument-load-status {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 4px;
+  min-height: 15px;
+  color: #7a838d;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: normal;
+}
+
+.instrument-load-status small {
+  color: inherit;
+  font: inherit;
+}
+
+.instrument-load-progress {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 5px;
+  accent-color: #087fa7;
+}
+
+.instrument-load-status a {
+  grid-column: 1 / -1;
+  color: #1769aa;
+  text-decoration: none;
+}
+
+.instrument-load-status a:hover {
+  text-decoration: underline;
+}
+
+.sonification-instrument-control small {
+  color: #7a838d;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: normal;
+  white-space: nowrap;
+}
+
+.sonification-instrument-control a {
+  color: #1769aa;
+  text-decoration: none;
+}
+
+.sonification-instrument-control a:hover {
+  text-decoration: underline;
 }
 
 .sonification-actions {
   display: flex;
+  align-items: center;
+  justify-content: flex-end;
   gap: 8px;
 }
 
@@ -752,6 +833,88 @@
   line-height: 1.45;
 }
 
+.sonification-traffic-link {
+  margin-top: 10px;
+  padding: 13px 15px;
+  border: 1px solid #cbdce5;
+  border-radius: 6px;
+  background: #f5f9fb;
+}
+
+.sonification-traffic-link-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.sonification-traffic-link-heading > div {
+  display: grid;
+  gap: 3px;
+}
+
+.sonification-traffic-link-heading strong {
+  color: #334653;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+
+.sonification-traffic-link-heading span:not(.traffic-playback-state) {
+  color: #72818c;
+  font-size: 11px;
+}
+
+.traffic-playback-state {
+  flex: 0 0 auto;
+  color: #687984;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.traffic-playback-state.is-playing {
+  color: #18814f;
+}
+
+.sonification-traffic-link-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.sonification-traffic-link-grid > div {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  padding: 9px 10px;
+  border: 1px solid #e1e8ed;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.sonification-traffic-link-grid span {
+  color: #71808c;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.sonification-traffic-link-grid strong {
+  overflow: hidden;
+  color: #293943;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sonification-traffic-link > small {
+  display: block;
+  margin-top: 8px;
+  color: #73828c;
+  font-size: 10px;
+}
+
 .sonification-summary-card {
   display: flex;
   min-width: 0;
@@ -792,12 +955,28 @@
   }
 
   .sonification-controls {
-    align-items: stretch;
-    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr) minmax(150px, 0.8fr);
+    align-items: end;
+  }
+
+  .sonification-instrument-control {
+    margin-left: 0;
+  }
+
+  .sonification-instrument-control select {
+    width: 100%;
+  }
+
+  .sonification-instrument-control small {
+    white-space: normal;
   }
 
   .sonification-button {
     width: 100%;
+  }
+
+  .sonification-actions {
+    grid-column: 1 / -1;
   }
 
   .sonification-metrics {
@@ -810,6 +989,15 @@
 
   .sonification-sound-guide-items {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sonification-traffic-link-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sonification-traffic-link-heading {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .audio-visualizer {
