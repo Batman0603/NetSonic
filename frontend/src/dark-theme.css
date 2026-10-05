@@ -1,0 +1,416 @@
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ns-bg: #17181e;
+  --ns-panel: #202127;
+  --ns-panel-soft: #25272f;
+  --ns-border: #343640;
+  --ns-border-dark: #484a56;
+  --ns-text: #e4e5eb;
+  --ns-text-secondary: #a1a4b1;
+  --ns-text-muted: #808491;
+  --ns-blue: #8b5cf6;
+  --ns-blue-dark: #7545dc;
+  --ns-blue-soft: #302746;
+  --ns-indigo: #a855f7;
+  --ns-green: #27b879;
+  --ns-green-soft: #173a2d;
+  --ns-red: #f07878;
+  --ns-red-soft: #402628;
+  --ns-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  background: #17181e;
+  color: #e4e5eb;
+}
+
+:root[data-theme="dark"] body,
+:root[data-theme="dark"] .app,
+:root[data-theme="dark"] .dashboard-shell {
+  background: #17181e;
+  color: #e4e5eb;
+}
+
+:root[data-theme="dark"] .dashboard-shell {
+  --dash-ink: #e4e5eb;
+  --dash-muted: #9a9daa;
+  --dash-line: #343640;
+  --dash-blue: #a855f7;
+}
+
+:root[data-theme="dark"] .dashboard-shell .app-header {
+  background: #131318;
+  border-bottom: 1px solid #2b2c34;
+}
+
+:root[data-theme="dark"] .dashboard-shell .brand-mark {
+  background: #8b5cf6;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .dashboard-nav {
+  background: #1d1e25;
+  border-color: #343640;
+}
+
+:root[data-theme="dark"] .dashboard-nav a,
+:root[data-theme="dark"] .dashboard-shell .section-heading h2,
+:root[data-theme="dark"] .dashboard-shell .topology-header h2,
+:root[data-theme="dark"] .dashboard-shell .traffic-header h2,
+:root[data-theme="dark"] .dashboard-shell .sonification-header h2,
+:root[data-theme="dark"] .dashboard-shell .dashboard-intro h2 {
+  color: #e4e5eb;
+}
+
+:root[data-theme="dark"] .dashboard-shell .eyebrow,
+:root[data-theme="dark"] .dashboard-shell .inventory-heading h3,
+:root[data-theme="dark"] .dashboard-shell .topology-metric span {
+  color: #b78cff;
+}
+
+:root[data-theme="dark"] .dashboard-nav a:hover,
+:root[data-theme="dark"] .dashboard-nav .dashboard-nav-active {
+  color: #c4a5ff;
+  border-bottom-color: #a855f7;
+}
+
+:root[data-theme="dark"] .dashboard-shell .app-header-right .learn-nav-link {
+  border-color: #41424d;
+  color: #dedfe6;
+}
+
+:root[data-theme="dark"] .dashboard-shell .learn-nav-link:hover {
+  border-color: #a855f7;
+  color: #cfadff;
+}
+
+:root[data-theme="dark"] .dashboard-shell .dashboard-intro,
+:root[data-theme="dark"] .dashboard-shell .interface-toolbar,
+:root[data-theme="dark"] .dashboard-shell .discovery-section,
+:root[data-theme="dark"] .dashboard-shell .topology-section,
+:root[data-theme="dark"] .dashboard-shell .traffic-section,
+:root[data-theme="dark"] .dashboard-shell .sonification-panel,
+:root[data-theme="dark"] .dashboard-shell .dashboard-empty {
+  background: #202127;
+  border-color: #343640;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 13%);
+}
+
+:root[data-theme="dark"] .dashboard-shell .dashboard-intro {
+  border-left-color: #a855f7;
+}
+
+:root[data-theme="dark"] .dashboard-shell .intro-status {
+  background: #1b3028;
+  border-color: #315541;
+}
+
+:root[data-theme="dark"] .dashboard-shell .intro-status strong {
+  color: #a9e8c6;
+}
+
+:root[data-theme="dark"] .dashboard-shell .intro-status span:last-child {
+  color: #94b7a3;
+}
+
+:root[data-theme="dark"] .dashboard-shell .dashboard-intro .eyebrow,
+:root[data-theme="dark"] .dashboard-shell .intro-description,
+:root[data-theme="dark"] .dashboard-shell .interface-toolbar-info p,
+:root[data-theme="dark"] .dashboard-shell .section-description,
+:root[data-theme="dark"] .dashboard-shell .topology-description,
+:root[data-theme="dark"] .dashboard-shell .traffic-description {
+  color: #a1a4b1;
+}
+
+:root[data-theme="dark"] .dashboard-shell :is(input, select),
+:root[data-theme="dark"] .dashboard-shell .traffic-card,
+:root[data-theme="dark"] .dashboard-shell .traffic-direction-summary article,
+:root[data-theme="dark"] .dashboard-shell .traffic-chart-card,
+:root[data-theme="dark"] .dashboard-shell .traffic-panel,
+:root[data-theme="dark"] .dashboard-shell .topology-metric,
+:root[data-theme="dark"] .dashboard-shell .topology-map-panel,
+:root[data-theme="dark"] .dashboard-shell .node-details-panel,
+:root[data-theme="dark"] .dashboard-shell .node-details-empty,
+:root[data-theme="dark"] .dashboard-shell .sonification-controls,
+:root[data-theme="dark"] .dashboard-shell .sonification-metric,
+:root[data-theme="dark"] .dashboard-shell .sonification-summary-card,
+:root[data-theme="dark"] .dashboard-shell .sonification-sound-guide-item,
+:root[data-theme="dark"] .dashboard-shell .sonification-traffic-link-grid > div {
+  background: #25272f;
+  border-color: #393b46;
+  color: #e4e5eb;
+}
+
+:root[data-theme="dark"] .dashboard-shell .secondary-button,
+:root[data-theme="dark"] .dashboard-shell .traffic-controls .secondary-button {
+  background: #2a2c35;
+  border-color: #4a4d59;
+  color: #e0e1e8;
+}
+
+:root[data-theme="dark"] .dashboard-shell .secondary-button:hover {
+  background: #343640;
+  border-color: #8b5cf6;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .dashboard-shell .traffic-status-bar,
+:root[data-theme="dark"] .dashboard-shell .sonification-status,
+:root[data-theme="dark"] .dashboard-shell .sonification-sound-guide,
+:root[data-theme="dark"] .dashboard-shell .sonification-traffic-link {
+  background: #25272f;
+  border-color: #393b46;
+  color: #d8d9e0;
+}
+
+:root[data-theme="dark"] .dashboard-shell .device-table th {
+  background: #2b2d36;
+  color: #c8cad3;
+}
+
+:root[data-theme="dark"] .dashboard-shell .device-table,
+:root[data-theme="dark"] .dashboard-shell .device-table tbody tr,
+:root[data-theme="dark"] .dashboard-shell .device-table tbody tr:hover {
+  background: #202127;
+  color: #d5d7e0;
+}
+
+:root[data-theme="dark"] .dashboard-shell .topology-metric strong,
+:root[data-theme="dark"] .dashboard-shell .node-identity strong,
+:root[data-theme="dark"] .dashboard-shell .node-properties dd,
+:root[data-theme="dark"] .dashboard-shell .traffic-direction-summary strong {
+  color: #e4e5eb;
+}
+
+:root[data-theme="dark"] .dashboard-shell .topology-metric span,
+:root[data-theme="dark"] .dashboard-shell .node-identity span,
+:root[data-theme="dark"] .dashboard-shell .node-properties dt,
+:root[data-theme="dark"] .dashboard-shell .traffic-direction-summary span {
+  color: #a1a4b1;
+}
+
+:root[data-theme="dark"] .dashboard-shell .panel-header,
+:root[data-theme="dark"] .dashboard-shell .topology-legend,
+:root[data-theme="dark"] .dashboard-shell .topology-canvas-footer {
+  background: #25272f;
+  border-color: #393b46;
+  color: #b0b2bd;
+}
+
+:root[data-theme="dark"] .dashboard-shell .panel-header h3 {
+  color: #e0e1e8;
+}
+
+:root[data-theme="dark"] .dashboard-shell .topology-canvas {
+  background-color: #191a20;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 5%) 1px, transparent 1px);
+}
+
+:root[data-theme="dark"] .dashboard-shell .node-identity,
+:root[data-theme="dark"] .dashboard-shell .node-status-row,
+:root[data-theme="dark"] .dashboard-shell .node-properties > div {
+  border-color: #393b46;
+}
+
+:root[data-theme="dark"] .dashboard-shell .node-type-local {
+  background: #302746;
+  border-color: #7250a8;
+  color: #d4baff;
+}
+
+:root[data-theme="dark"] .dashboard-shell .node-type-gateway {
+  background: #18382e;
+  border-color: #2a815d;
+  color: #a5f0ce;
+}
+
+:root[data-theme="dark"] .dashboard-shell .node-type-device {
+  background: #2b2d36;
+  border-color: #4a4d5a;
+  color: #d0d3dd;
+}
+
+:root[data-theme="dark"] .dashboard-shell .traffic-card strong {
+  color: #f0eff6;
+}
+
+:root[data-theme="dark"] .dashboard-shell .traffic-card span,
+:root[data-theme="dark"] .dashboard-shell .traffic-card small,
+:root[data-theme="dark"] .dashboard-shell .traffic-card-heading p {
+  color: #a1a4b1;
+}
+
+:root[data-theme="dark"] .dashboard-shell .traffic-list-row span,
+:root[data-theme="dark"] .dashboard-shell .traffic-list-row strong,
+:root[data-theme="dark"] .dashboard-shell .traffic-list-row small {
+  color: #c4c6d0;
+}
+
+:root[data-theme="dark"] .dashboard-shell .device-table td,
+:root[data-theme="dark"] .dashboard-shell .device-table tr,
+:root[data-theme="dark"] .dashboard-shell .traffic-list-row {
+  border-color: #373943;
+  color: #d2d3dc;
+}
+
+:root[data-theme="dark"] .dashboard-shell .topology-canvas,
+:root[data-theme="dark"] .dashboard-shell .topology-workspace,
+:root[data-theme="dark"] .dashboard-shell .topology-details,
+:root[data-theme="dark"] .dashboard-shell .topology-node-details {
+  background-color: #1a1b22;
+  border-color: #393b46;
+}
+
+:root[data-theme="dark"] .dashboard-shell .sonification-visualizer-card {
+  background: #202127;
+  border-color: #393b46;
+}
+
+:root[data-theme="dark"] .dashboard-shell .sonification-button-primary {
+  background: #7545dc;
+}
+
+:root[data-theme="dark"] .dashboard-shell .app-footer {
+  background: #131318;
+  color: #a1a4b1;
+}
+
+:root[data-theme="dark"] .learn-page {
+  background: #17181e;
+  color: #e4e5eb;
+}
+
+:root[data-theme="dark"] .learn-header {
+  background: #131318;
+  border-color: #2b2c34;
+}
+
+:root[data-theme="dark"] .learn-sidebar button {
+  color: #a1a4b1;
+}
+
+:root[data-theme="dark"] .learn-sidebar button:hover,
+:root[data-theme="dark"] .learn-section,
+:root[data-theme="dark"] .learn-sidebar .learn-search {
+  background: #202127;
+  color: #e4e5eb;
+  border-color: #393b46;
+}
+
+:root[data-theme="dark"] .learn-search {
+  background: #25272f;
+  color: #e4e5eb;
+  border-color: #393b46;
+}
+
+:root[data-theme="dark"] .learn-section :is(h2, h3, h4, p, li, td, th),
+:root[data-theme="dark"] .learn-section strong {
+  color: #d9dae2;
+}
+
+:root[data-theme="dark"] .learn-section .lead {
+  color: #d9dae2;
+}
+
+:root[data-theme="dark"] .learn-section .definition-card,
+:root[data-theme="dark"] .learn-section .warning-card,
+:root[data-theme="dark"] .learn-section .architecture-flow,
+:root[data-theme="dark"] .learn-section .topology-example,
+:root[data-theme="dark"] .learn-section .learn-info-card,
+:root[data-theme="dark"] .learn-section .metric-table,
+:root[data-theme="dark"] .learn-section .mapping-table,
+:root[data-theme="dark"] .learn-section .learn-faq-item {
+  background: #25272f;
+  border-color: #393b46;
+}
+
+:root[data-theme="dark"] .learn-section .definition-card {
+  border-left-color: #20c6dc;
+}
+
+:root[data-theme="dark"] .learn-section .definition-card strong,
+:root[data-theme="dark"] .learn-section .warning-card strong,
+:root[data-theme="dark"] .learn-section .learn-table-row strong,
+:root[data-theme="dark"] .learn-section .learn-faq-item summary {
+  color: #f0eff6;
+}
+
+:root[data-theme="dark"] .learn-section .warning-card {
+  background: #332d20;
+}
+
+:root[data-theme="dark"] .learn-section .architecture-step strong,
+:root[data-theme="dark"] .learn-section .topology-example div {
+  background: #202127;
+  border-color: #484a56;
+  color: #e4e5eb;
+}
+
+:root[data-theme="dark"] .learn-section .learn-table-row {
+  border-color: #393b46;
+}
+
+:root[data-theme="dark"] .learn-section .learn-table-row span,
+:root[data-theme="dark"] .learn-section .small-note,
+:root[data-theme="dark"] .learn-section .learn-list {
+  color: #b4b6c1;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid #596268;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.theme-toggle:hover {
+  border-color: #a855f7;
+  color: #c4a5ff;
+  background: rgb(168 85 247 / 9%);
+}
+
+.theme-toggle > span:first-child {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.learn-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+:root[data-theme="dark"] .learn-header-actions .theme-toggle {
+  border-color: #43515c;
+  color: #f4f4f7;
+}
+
+@media (max-width: 760px) {
+  .theme-toggle {
+    min-height: 30px;
+    padding: 0 8px;
+  }
+
+  .dashboard-shell .app-header-right .theme-toggle > span:last-child {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html,
+  body,
+  .app,
+  .dashboard-shell,
+  .learn-page {
+    transition: background-color 180ms ease, color 180ms ease;
+  }
+}

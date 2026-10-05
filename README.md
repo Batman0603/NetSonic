@@ -132,6 +132,10 @@ The backend creates its SQLite database automatically when it starts. With the c
 
 For request and response details, use the interactive [API docs](http://127.0.0.1:8000/docs) while the backend is running.
 
+## How the audio follows traffic
+
+NetSonic uses sampled instrument sounds as the timbre for individual notes; it does not play one continuous sample recording. While fresh captured traffic is present, the browser triggers instrument notes in a short repeating phrase. Packet rate controls tempo, the backend's traffic pitch parameter selects the next note within a pentatonic scale, traffic intensity controls note velocity, and inbound/outbound direction controls stereo position. The drums option uses a fixed kick, snare, and hi-hat pattern, with tempo and velocity responding to traffic. Playback becomes silent when the measured packet rate is zero or capture updates stop arriving. A steady traffic pattern can therefore sound repetitive even though the note events are driven by live measurements.
+
 ## Permissions, privacy, and audio
 
 - **Packet capture permissions:** live capture uses Scapy and may need raw-packet capture privileges on your operating system. If the API starts but traffic remains empty, check the permissions granted to the backend process and confirm the selected interface is active.

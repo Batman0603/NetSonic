@@ -7,6 +7,7 @@ import { DiscoveryPanel } from "../components/DiscoveryPanel";
 import { TopologyView } from "../components/TopologyView";
 import { TrafficMonitor } from "../components/TrafficMonitor";
 import { SonificationPanel } from "../components/SonificationPanel";
+import { ThemeToggle } from "../components/ThemeToggle";
 
 import {
   getInterfaces,
@@ -74,6 +75,7 @@ function DashboardPage() {
         </div>
 
         <div className="app-header-right">
+          <ThemeToggle />
           <a href="/learn" className="learn-nav-link">
             Learn NetSonic
           </a>
@@ -86,9 +88,6 @@ function DashboardPage() {
             </span>
           </div>
 
-          <div className="header-version">
-            PHASE 4
-          </div>
         </div>
       </header>
 

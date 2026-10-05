@@ -22,6 +22,7 @@ import {
 } from "../services/traffic";
 
 import "./TrafficMonitor.css";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface TrafficMonitorProps {
   interfaceName: string;
@@ -53,6 +54,8 @@ function formatRate(bytesPerSecond: number): string {
 export function TrafficMonitor({
   interfaceName,
 }: TrafficMonitorProps) {
+  const { theme } = useTheme();
+  const dark = theme === "dark";
   const [traffic, setTraffic] =
     useState<TrafficSnapshot | null>(null);
 
@@ -459,15 +462,30 @@ export function TrafficMonitor({
                     >
                       <CartesianGrid
                         strokeDasharray="3 3"
+                        stroke={dark ? "#3b3d48" : "#d8dee8"}
                       />
 
                       <XAxis
                         dataKey="time"
+                        tick={{ fill: dark ? "#a1a4b1" : "#64748b", fontSize: 11 }}
+                        axisLine={{ stroke: dark ? "#555866" : "#cbd5e1" }}
+                        tickLine={{ stroke: dark ? "#555866" : "#cbd5e1" }}
                       />
 
-                      <YAxis />
+                      <YAxis
+                        tick={{ fill: dark ? "#a1a4b1" : "#64748b", fontSize: 11 }}
+                        axisLine={{ stroke: dark ? "#555866" : "#cbd5e1" }}
+                        tickLine={{ stroke: dark ? "#555866" : "#cbd5e1" }}
+                      />
 
-                      <Tooltip />
+                      <Tooltip
+                        contentStyle={{
+                          background: dark ? "#25272f" : "#ffffff",
+                          border: `1px solid ${dark ? "#454752" : "#d8dee8"}`,
+                          color: dark ? "#e4e5eb" : "#263238",
+                        }}
+                        labelStyle={{ color: dark ? "#e4e5eb" : "#263238" }}
+                      />
 
                       <Line
                         type="monotone"
@@ -509,19 +527,35 @@ export function TrafficMonitor({
                     >
                       <CartesianGrid
                         strokeDasharray="3 3"
+                        stroke={dark ? "#3b3d48" : "#d8dee8"}
                       />
 
                       <XAxis
                         dataKey="protocol"
+                        tick={{ fill: dark ? "#a1a4b1" : "#64748b", fontSize: 11 }}
+                        axisLine={{ stroke: dark ? "#555866" : "#cbd5e1" }}
+                        tickLine={{ stroke: dark ? "#555866" : "#cbd5e1" }}
                       />
 
-                      <YAxis />
+                      <YAxis
+                        tick={{ fill: dark ? "#a1a4b1" : "#64748b", fontSize: 11 }}
+                        axisLine={{ stroke: dark ? "#555866" : "#cbd5e1" }}
+                        tickLine={{ stroke: dark ? "#555866" : "#cbd5e1" }}
+                      />
 
-                      <Tooltip />
+                      <Tooltip
+                        contentStyle={{
+                          background: dark ? "#25272f" : "#ffffff",
+                          border: `1px solid ${dark ? "#454752" : "#d8dee8"}`,
+                          color: dark ? "#e4e5eb" : "#263238",
+                        }}
+                        labelStyle={{ color: dark ? "#e4e5eb" : "#263238" }}
+                      />
 
                       <Bar
                         dataKey="packets"
                         name="Packets"
+                        fill={dark ? "#a855f7" : "#1769aa"}
                       />
                     </BarChart>
                   </ResponsiveContainer>

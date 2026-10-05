@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 
 import "./LearnPage.css";
+import { ThemeToggle } from "../components/ThemeToggle";
 
 interface LearnSection {
   id: string;
@@ -138,12 +139,12 @@ function LearnPage() {
             </p>
           </div>
 
-          <a
-            href="/"
-            className="learn-dashboard-link"
-          >
-            ← Dashboard
-          </a>
+          <div className="learn-header-actions">
+            <ThemeToggle />
+            <a href="/" className="learn-dashboard-link">
+              ← Dashboard
+            </a>
+          </div>
         </div>
       </header>
 
@@ -516,30 +517,41 @@ function LearnPage() {
 
             <div className="mapping-table">
               <MappingRow
-                network="Traffic intensity"
-                audio="Volume"
-              />
-
-              <MappingRow
-                network="Traffic rate"
-                audio="Pitch"
-              />
-
-              <MappingRow
                 network="Packet rate"
-                audio="Pulse / rhythm"
+                audio="Tempo (76–165 BPM)"
               />
 
               <MappingRow
-                network="Protocol"
-                audio="Waveform / timbre"
+                network="Backend traffic pitch"
+                audio="Next note, quantized to a pentatonic scale"
               />
 
               <MappingRow
-                network="Direction"
-                audio="Stereo position"
+                network="Traffic intensity"
+                audio="Sample velocity (loudness)"
+              />
+
+              <MappingRow
+                network="Traffic direction"
+                audio="Stereo position (inbound left, outbound right)"
+              />
+
+              <MappingRow
+                network="Instrument choice"
+                audio="Sampled piano, keyboard, flute, guitar, or drum timbre"
               />
             </div>
+
+            <p>
+              Instrument samples provide the sound of each note; they are not
+              played as one continuous recording. The browser retriggers
+              individual sampled notes while fresh packet activity is present.
+              A short repeating melodic phrase keeps the notes musical, so a
+              steady stream of traffic can sound repetitive. The drum option
+              uses a fixed kick, snare, and hi-hat pattern whose tempo and
+              velocity follow traffic. When packet activity reaches zero or
+              traffic updates become stale, note playback stops.
+            </p>
 
             <div className="definition-card">
               <strong>Adaptive normalization</strong>
@@ -813,6 +825,11 @@ function LearnPage() {
             <Faq
               question="Why can't I hear audio?"
               answer="Browsers require audio playback to be initiated by a user interaction. Click Start Audio and make sure your system output device is working."
+            />
+
+            <Faq
+              question="Is NetSonic just replaying an instrument sample?"
+              answer="Instrument samples supply the timbre, but NetSonic triggers separate notes from them using live traffic measurements. Packet rate controls tempo, the traffic pitch parameter selects notes in a repeating pentatonic phrase, intensity controls note velocity, and direction controls stereo position. The drum option follows a fixed kick/snare/hi-hat pattern. The sound stops when packet activity is zero or capture updates are stale."
             />
 
             <Faq

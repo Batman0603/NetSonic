@@ -3,6 +3,7 @@ import cytoscape, {
   type Core,
   type ElementDefinition,
 } from "cytoscape";
+import { useTheme } from "../contexts/ThemeContext";
 
 import {
   getTopology,
@@ -17,6 +18,8 @@ interface TopologyViewProps {
 export function TopologyView({
   interfaceName,
 }: TopologyViewProps) {
+  const { theme } = useTheme();
+  const dark = theme === "dark";
   const containerRef = useRef<HTMLDivElement | null>(null);
   const cyRef = useRef<Core | null>(null);
 
@@ -138,13 +141,13 @@ export function TopologyView({
               "Inter, ui-sans-serif, system-ui, sans-serif",
             "font-size": 11,
             "font-weight": 600,
-            color: "#263238",
-            "background-color": "#ffffff",
+            color: dark ? "#e3e8ef" : "#263238",
+            "background-color": dark ? "#252a33" : "#ffffff",
             width: 150,
             height: 64,
             padding: "8px",
             "border-width": 1,
-            "border-color": "#b8c2cc",
+            "border-color": dark ? "#454d5a" : "#b8c2cc",
             "overlay-opacity": 0,
           },
         },
@@ -152,10 +155,10 @@ export function TopologyView({
         {
           selector: 'node[type = "local"]',
           style: {
-            "background-color": "#eef2ff",
-            "border-color": "#4f46e5",
+            "background-color": dark ? "#302746" : "#eef2ff",
+            "border-color": dark ? "#9a62e8" : "#4f46e5",
             "border-width": 2,
-            color: "#312e81",
+            color: dark ? "#e0caff" : "#312e81",
             width: 165,
             height: 70,
             "font-weight": 700,
@@ -165,10 +168,10 @@ export function TopologyView({
         {
           selector: 'node[type = "gateway"]',
           style: {
-            "background-color": "#ecfdf5",
-            "border-color": "#0f766e",
+            "background-color": dark ? "#18382e" : "#ecfdf5",
+            "border-color": dark ? "#2eb879" : "#0f766e",
             "border-width": 2,
-            color: "#115e59",
+            color: dark ? "#a5f0ce" : "#115e59",
             width: 165,
             height: 70,
             "font-weight": 700,
@@ -178,9 +181,9 @@ export function TopologyView({
         {
           selector: 'node[type = "device"]',
           style: {
-            "background-color": "#ffffff",
-            "border-color": "#94a3b8",
-            color: "#334155",
+            "background-color": dark ? "#252a33" : "#ffffff",
+            "border-color": dark ? "#454d5a" : "#94a3b8",
+            color: dark ? "#d5dbe5" : "#334155",
           },
         },
 
@@ -203,8 +206,8 @@ export function TopologyView({
           selector: "edge",
           style: {
             width: 1.5,
-            "line-color": "#a8b4c2",
-            "target-arrow-color": "#7b8794",
+            "line-color": dark ? "#596273" : "#a8b4c2",
+            "target-arrow-color": dark ? "#858fa0" : "#7b8794",
             "target-arrow-shape": "triangle",
             "curve-style": "bezier",
             "arrow-scale": 0.8,
@@ -216,8 +219,8 @@ export function TopologyView({
           selector: 'edge[relationship = "default-gateway"]',
           style: {
             width: 2.5,
-            "line-color": "#4f46e5",
-            "target-arrow-color": "#4f46e5",
+            "line-color": dark ? "#9a62e8" : "#4f46e5",
+            "target-arrow-color": dark ? "#9a62e8" : "#4f46e5",
             "arrow-scale": 0.9,
           },
         },
@@ -259,7 +262,7 @@ export function TopologyView({
       cy.destroy();
       cyRef.current = null;
     };
-  }, [topology]);
+  }, [topology, dark]);
 
   return (
     <section className="topology-section">
