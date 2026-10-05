@@ -17,6 +17,7 @@ export interface TrafficSummary {
   packets_per_second: number;
   total_packets: number;
   total_bytes: number;
+  captured_seconds: number;
 }
 
 export interface ProtocolStat {
@@ -38,6 +39,10 @@ export interface PeerStat {
   bytes: number;
 }
 
+export interface PeerProtocolStat extends PeerStat {
+  protocol: string;
+}
+
 export interface TimeSeriesPoint {
   timestamp: string;
   packets: number;
@@ -55,6 +60,7 @@ export interface SonificationUpdate {
   protocols: ProtocolStat[];
   directions: DirectionStat[];
   peers: PeerStat[];
+  peer_protocols: PeerProtocolStat[];
   timeseries: TimeSeriesPoint[];
 }
 

@@ -19,12 +19,24 @@ export interface TrafficPeerStat {
   bytes: number;
 }
 
+export interface TrafficPeerProtocolStat extends TrafficPeerStat {
+  protocol: string;
+}
+
+export interface TrafficFilters {
+  protocol: string;
+  peerIp: string;
+}
+
 export interface TrafficTimePoint {
   timestamp: string;
   packets: number;
   bytes: number;
   upload_bytes?: number;
   download_bytes?: number;
+  protocols?: TrafficProtocolStat[];
+  peers?: TrafficPeerStat[];
+  peer_protocols?: TrafficPeerProtocolStat[];
 }
 
 export interface TrafficSnapshot {
@@ -54,6 +66,7 @@ export interface TrafficSnapshot {
   directions: TrafficDirectionStat[];
 
   peers: TrafficPeerStat[];
+  peer_protocols?: TrafficPeerProtocolStat[];
 
   timeseries: TrafficTimePoint[];
 }

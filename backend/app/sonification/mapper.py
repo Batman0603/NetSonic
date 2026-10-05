@@ -251,6 +251,9 @@ class SonificationMapper:
                         0,
                     )
                 ),
+                "captured_seconds": int(
+                    snapshot.get("captured_seconds", 1)
+                ),
             },
             "protocols": protocols,
             "directions": directions,
@@ -258,6 +261,7 @@ class SonificationMapper:
                 "peers",
                 [],
             ),
+            "peer_protocols": snapshot.get("peer_protocols", []),
             "timeseries": snapshot.get(
                 "timeseries",
                 [],

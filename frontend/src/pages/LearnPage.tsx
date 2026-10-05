@@ -454,6 +454,14 @@ function LearnPage() {
                 meaning="Remote IP address associated with observed traffic."
               />
             </div>
+
+            <h3>Filter, alert, and review</h3>
+            <p>
+              Select a protocol or peer in the traffic tools to focus the charts and live sonification on matching traffic. Set packet-rate and Mbps thresholds to show a dashboard alert when live traffic crosses either limit.
+            </p>
+            <p>
+              Record a session while monitoring is active, stop to save it in this browser, then select it for review. Exports are available as CSV and JSON. Browser storage keeps up to 8 sessions with up to 1,200 one-second samples each; recordings contain aggregate packet metadata, never payloads.
+            </p>
           </section>
 
           <section
@@ -662,6 +670,9 @@ function LearnPage() {
                 description="Shows which protocols and remote peers contribute to observed traffic."
               />
             </div>
+            <p>
+              Open <strong>Customize dashboard</strong> to hide or reorder panels. This layout is saved in the current browser and does not change the data captured by NetSonic.
+            </p>
           </section>
 
           <section

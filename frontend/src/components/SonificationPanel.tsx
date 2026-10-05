@@ -13,6 +13,7 @@ import {
   type SonificationStatus,
   type SonificationUpdate,
 } from "../services/sonification";
+import type { TrafficFilters } from "../services/traffic";
 import {
   DrumMachine,
   ElectricPiano,
@@ -33,6 +34,7 @@ import "./SonificationPanel.css";
 
 interface SonificationPanelProps {
   interfaceName: string;
+  filters: TrafficFilters;
 }
 
 type SoundInstrument = "keyboard" | "piano" | "flute" | "guitar" | "drums";
@@ -113,6 +115,7 @@ function formatBytes(bytes: number): string {
 
 export function SonificationPanel({
   interfaceName,
+  filters,
 }: SonificationPanelProps) {
   const [
     status,
@@ -905,16 +908,50 @@ export function SonificationPanel({
         );
         setTrafficUpdateStale(false);
 
-        latestParametersRef.current =
-          update.parameters;
+        let matchedPackets = update.traffic.total_packets;
+        let matchedBytes = update.traffic.total_bytes;
+        let inboundPackets = 0;
+        let outboundPackets = 0;
 
-        latestPacketRateRef.current = update.traffic.packets_per_second;
+        if (filters.protocol && !filters.peerIp) {
+          const protocolRow = update.protocols.find((row) => row.protocol.toUpperCase() === filters.protocol.toUpperCase());
+          matchedPackets = protocolRow?.packets ?? 0;
+          matchedBytes = protocolRow?.bytes ?? 0;
+          const directionRows = update.peer_protocols.filter((row) => row.protocol.toUpperCase() === filters.protocol.toUpperCase());
+          inboundPackets = directionRows.filter((row) => row.direction === "inbound").reduce((sum, row) => sum + row.packets, 0);
+          outboundPackets = directionRows.filter((row) => row.direction === "outbound").reduce((sum, row) => sum + row.packets, 0);
+        } else if (filters.peerIp || filters.protocol) {
+          const rows = update.peer_protocols.filter((row) =>
+            (!filters.peerIp || row.ip_address === filters.peerIp) &&
+            (!filters.protocol || row.protocol.toUpperCase() === filters.protocol.toUpperCase()),
+          );
+          matchedPackets = rows.reduce((sum, row) => sum + row.packets, 0);
+          matchedBytes = rows.reduce((sum, row) => sum + row.bytes, 0);
+          inboundPackets = rows.filter((row) => row.direction === "inbound").reduce((sum, row) => sum + row.packets, 0);
+          outboundPackets = rows.filter((row) => row.direction === "outbound").reduce((sum, row) => sum + row.packets, 0);
+        }
+
+        const captureSeconds = Math.max(1, update.traffic.captured_seconds);
+        const matchedRate = matchedPackets / captureSeconds;
+        const activityShare = update.traffic.total_bytes > 0
+          ? matchedBytes / update.traffic.total_bytes
+          : update.traffic.total_packets > 0
+            ? matchedPackets / update.traffic.total_packets
+            : 0;
+        latestParametersRef.current = {
+          ...update.parameters,
+          intensity: update.parameters.intensity * clamp(activityShare, 0, 1),
+          direction: inboundPackets > outboundPackets ? "inbound" : outboundPackets > inboundPackets ? "outbound" : update.parameters.direction,
+        };
+
+        latestPacketRateRef.current = matchedRate;
         lastTrafficUpdateAtRef.current = Date.now();
 
         startPulseTimer();
       },
       [
         startPulseTimer,
+        filters,
       ],
     );
 

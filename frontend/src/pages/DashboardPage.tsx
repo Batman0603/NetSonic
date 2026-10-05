@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { TrafficFilters } from "../services/traffic";
 
 import "../App.css";
 import "./DashboardPage.css";
@@ -9,6 +10,39 @@ import { TrafficMonitor } from "../components/TrafficMonitor";
 import { SonificationPanel } from "../components/SonificationPanel";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { OnboardingGuide } from "../components/OnboardingGuide";
+
+type DashboardPanel = "discovery" | "topology" | "traffic" | "sonification";
+interface DashboardLayout {
+  order: DashboardPanel[];
+  visible: Record<DashboardPanel, boolean>;
+}
+
+const DEFAULT_LAYOUT: DashboardLayout = {
+  order: ["discovery", "topology", "traffic", "sonification"],
+  visible: { discovery: true, topology: true, traffic: true, sonification: true },
+};
+
+function readDashboardLayout(): DashboardLayout {
+  try {
+    const saved = localStorage.getItem("netsonic.dashboard.layout");
+    if (!saved) return DEFAULT_LAYOUT;
+    const parsed = JSON.parse(saved) as Partial<DashboardLayout>;
+    const order = Array.isArray(parsed.order)
+      ? [...new Set(parsed.order.filter((item): item is DashboardPanel =>
+        DEFAULT_LAYOUT.order.includes(item as DashboardPanel),
+      ))]
+      : [];
+    for (const panel of DEFAULT_LAYOUT.order) {
+      if (!order.includes(panel)) order.push(panel);
+    }
+    return {
+      order,
+      visible: { ...DEFAULT_LAYOUT.visible, ...parsed.visible },
+    };
+  } catch {
+    return DEFAULT_LAYOUT;
+  }
+}
 
 import {
   getInterfaces,
@@ -24,6 +58,42 @@ function DashboardPage() {
 
   const [interfaceError, setInterfaceError] =
     useState<string | null>(null);
+
+  const [trafficFilters, setTrafficFilters] = useState<TrafficFilters>({
+    protocol: "",
+    peerIp: "",
+  });
+
+  const [dashboardLayout, setDashboardLayout] = useState(readDashboardLayout);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "netsonic.dashboard.layout",
+        JSON.stringify(dashboardLayout),
+      );
+    } catch {
+      // Keep layout changes for this visit if storage is unavailable.
+    }
+  }, [dashboardLayout]);
+
+  function movePanel(panel: DashboardPanel, offset: -1 | 1) {
+    setDashboardLayout((current) => {
+      const order = [...current.order];
+      const index = order.indexOf(panel);
+      const nextIndex = index + offset;
+      if (nextIndex < 0 || nextIndex >= order.length) return current;
+      [order[index], order[nextIndex]] = [order[nextIndex], order[index]];
+      return { ...current, order };
+    });
+  }
+
+  function setPanelVisible(panel: DashboardPanel, visible: boolean) {
+    setDashboardLayout((current) => ({
+      ...current,
+      visible: { ...current.visible, [panel]: visible },
+    }));
+  }
 
   useEffect(() => {
     async function loadInterfaces(): Promise<void> {
@@ -101,6 +171,28 @@ function DashboardPage() {
       </nav>
 
       <main className="app-main">
+        <details className="dashboard-layout-editor">
+          <summary>Customize dashboard</summary>
+          <div className="dashboard-layout-editor-content">
+            <p>Choose visible panels and change their display order. Preferences are saved in this browser.</p>
+            {dashboardLayout.order.map((panel, index) => (
+              <div className="dashboard-layout-row" key={panel}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={dashboardLayout.visible[panel]}
+                    onChange={(event) => setPanelVisible(panel, event.target.checked)}
+                  />
+                  {panel[0].toUpperCase() + panel.slice(1)}
+                </label>
+                <div>
+                  <button type="button" onClick={() => movePanel(panel, -1)} disabled={index === 0} aria-label={`Move ${panel} up`}>↑</button>
+                  <button type="button" onClick={() => movePanel(panel, 1)} disabled={index === dashboardLayout.order.length - 1} aria-label={`Move ${panel} down`}>↓</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </details>
         <section className="dashboard-intro" id="overview">
           <div>
             <p className="eyebrow">
@@ -225,36 +317,49 @@ function DashboardPage() {
         </section>
 
         <div className="dashboard-grid">
-          <div className="dashboard-column dashboard-left-column">
-            <section className="dashboard-widget dashboard-discovery" id="discovery">
-              <DiscoveryPanel />
-            </section>
-
-            {selectedInterface ? (
-              <section className="dashboard-widget dashboard-topology" id="topology">
-                <TopologyView interfaceName={selectedInterface} />
-              </section>
-            ) : (
-              <section className="dashboard-widget dashboard-empty" id="topology">
-                <div className="empty-icon">⌁</div>
-                <h3>No network interface selected</h3>
-                <p>Select an active interface above to build the topology and start traffic sonification.</p>
-              </section>
-            )}
-          </div>
-
-          <div className="dashboard-column dashboard-right-column">
-            <section className="dashboard-widget dashboard-traffic" id="traffic">
-              <TrafficMonitor key={selectedInterface} interfaceName={selectedInterface} />
-            </section>
-          </div>
+          {dashboardLayout.order
+            .filter((panel) => dashboardLayout.visible[panel])
+            .filter((panel) => panel !== "sonification" || Boolean(selectedInterface))
+            .map((panel) => {
+              if (panel === "discovery") {
+                return (
+                  <section className="dashboard-widget dashboard-discovery" id="discovery" key={panel}>
+                    <DiscoveryPanel />
+                  </section>
+                );
+              }
+              if (panel === "topology") {
+                return selectedInterface ? (
+                  <section className="dashboard-widget dashboard-topology" id="topology" key={panel}>
+                    <TopologyView interfaceName={selectedInterface} />
+                  </section>
+                ) : (
+                  <section className="dashboard-widget dashboard-empty" id="topology" key={panel}>
+                    <div className="empty-icon">⌁</div>
+                    <h3>No network interface selected</h3>
+                    <p>Select an active interface above to build the topology and start traffic sonification.</p>
+                  </section>
+                );
+              }
+              if (panel === "traffic") {
+                return (
+                  <section className="dashboard-widget dashboard-traffic" id="traffic" key={panel}>
+                    <TrafficMonitor
+                      key={selectedInterface}
+                      interfaceName={selectedInterface}
+                      filters={trafficFilters}
+                      onFiltersChange={setTrafficFilters}
+                    />
+                  </section>
+                );
+              }
+              return (
+                <section className="dashboard-widget dashboard-sonification" id="sonification" key={panel}>
+                  <SonificationPanel interfaceName={selectedInterface} filters={trafficFilters} />
+                </section>
+              );
+            })}
         </div>
-
-        {selectedInterface && (
-          <section className="dashboard-widget dashboard-sonification" id="sonification">
-            <SonificationPanel interfaceName={selectedInterface} />
-          </section>
-        )}
       </main>
 
       <footer className="app-footer">

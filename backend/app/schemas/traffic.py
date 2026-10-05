@@ -46,12 +46,19 @@ class TrafficPeerStat(BaseModel):
     bytes: int = Field(ge=0)
 
 
+class TrafficPeerProtocolStat(TrafficPeerStat):
+    protocol: str
+
+
 class TrafficTimePoint(BaseModel):
     timestamp: datetime
     packets: int = Field(ge=0)
     bytes: int = Field(ge=0)
     upload_bytes: int = Field(ge=0)
     download_bytes: int = Field(ge=0)
+    protocols: list[TrafficProtocolStat] = Field(default_factory=list)
+    peers: list[TrafficPeerStat] = Field(default_factory=list)
+    peer_protocols: list[TrafficPeerProtocolStat] = Field(default_factory=list)
 
 
 class TrafficSnapshotResponse(BaseModel):
@@ -81,4 +88,5 @@ class TrafficSnapshotResponse(BaseModel):
     protocols: list[TrafficProtocolStat]
     directions: list[TrafficDirectionStat]
     peers: list[TrafficPeerStat]
+    peer_protocols: list[TrafficPeerProtocolStat] = Field(default_factory=list)
     timeseries: list[TrafficTimePoint]

@@ -152,12 +152,51 @@
 }
 
 :root[data-theme="dark"] .dashboard-shell .traffic-status-bar,
+:root[data-theme="dark"] .dashboard-shell .traffic-tools,
+:root[data-theme="dark"] .dashboard-shell .traffic-alert-settings,
 :root[data-theme="dark"] .dashboard-shell .sonification-status,
 :root[data-theme="dark"] .dashboard-shell .sonification-sound-guide,
 :root[data-theme="dark"] .dashboard-shell .sonification-traffic-link {
   background: #25272f;
   border-color: #393b46;
   color: #d8d9e0;
+}
+
+:root[data-theme="dark"] .dashboard-shell .traffic-alert-settings strong {
+  color: #e2e8f0;
+}
+
+:root[data-theme="dark"] .dashboard-shell .dashboard-layout-editor,
+:root[data-theme="dark"] .dashboard-shell .dashboard-layout-editor > summary {
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .dashboard-shell .dashboard-layout-editor-content,
+:root[data-theme="dark"] .dashboard-shell .dashboard-layout-row button {
+  border-color: #393b46;
+  background: #25272f;
+  color: #e4e5eb;
+}
+
+:root[data-theme="dark"] .dashboard-shell .dashboard-layout-row {
+  border-color: #393b46;
+}
+
+:root[data-theme="dark"] .dashboard-shell .dashboard-layout-row label,
+:root[data-theme="dark"] .dashboard-shell .dashboard-layout-editor-content > p {
+  color: #a1a4b1;
+}
+
+:root[data-theme="dark"] .dashboard-shell .traffic-threshold-alert {
+  border-color: #854d0e;
+  background: #422006;
+  color: #fde68a;
+}
+
+:root[data-theme="dark"] .dashboard-shell .traffic-replay-banner {
+  border-color: #1d4ed8;
+  background: #172554;
+  color: #bfdbfe;
 }
 
 :root[data-theme="dark"] .dashboard-shell .device-table th {

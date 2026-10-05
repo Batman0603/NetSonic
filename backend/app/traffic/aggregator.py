@@ -37,6 +37,9 @@ class TrafficBucket:
     peers: dict[tuple[str, str], TrafficCounter] = field(
         default_factory=dict
     )
+    peer_protocols: dict[tuple[str, str, str], TrafficCounter] = field(
+        default_factory=dict
+    )
 
 
 def classify_protocol(protocol_number: int) -> str:
@@ -178,6 +181,11 @@ class TrafficAggregator:
 
                 peer_counter.add(packet_size)
 
+                bucket.peer_protocols.setdefault(
+                    (peer_ip, direction, protocol),
+                    TrafficCounter(),
+                ).add(packet_size)
+
     def snapshot(
         self,
         window_seconds: int = 60,
@@ -224,6 +232,7 @@ class TrafficAggregator:
             peers = self._aggregate_peers(
                 buckets
             )
+            peer_protocols = self._aggregate_peer_protocols(buckets)
 
             upload_counter = directions.get(
                 "outbound",
@@ -298,6 +307,41 @@ class TrafficAggregator:
                         "bytes": bucket.bytes,
                         "upload_bytes": upload_bytes,
                         "download_bytes": download_bytes,
+                        "protocols": [
+                            {
+                                "protocol": protocol,
+                                "packets": counter.packets,
+                                "bytes": counter.bytes,
+                            }
+                            for protocol, counter in bucket.protocols.items()
+                        ],
+                        "peers": [
+                            {
+                                "ip_address": peer_ip,
+                                "direction": direction,
+                                "packets": counter.packets,
+                                "bytes": counter.bytes,
+                            }
+                            for (peer_ip, direction), counter in sorted(
+                                bucket.peers.items(),
+                                key=lambda item: item[1].bytes,
+                                reverse=True,
+                            )[:20]
+                        ],
+                        "peer_protocols": [
+                            {
+                                "ip_address": peer_ip,
+                                "direction": direction,
+                                "protocol": protocol,
+                                "packets": counter.packets,
+                                "bytes": counter.bytes,
+                            }
+                            for (peer_ip, direction, protocol), counter in sorted(
+                                bucket.peer_protocols.items(),
+                                key=lambda item: item[1].bytes,
+                                reverse=True,
+                            )[:20]
+                        ],
                     }
                 )
 
@@ -370,6 +414,21 @@ class TrafficAggregator:
                     )[:10]
                 ],
 
+                "peer_protocols": [
+                    {
+                        "ip_address": peer_ip,
+                        "direction": direction,
+                        "protocol": protocol,
+                        "packets": counter.packets,
+                        "bytes": counter.bytes,
+                    }
+                    for (peer_ip, direction, protocol), counter in sorted(
+                        peer_protocols.items(),
+                        key=lambda item: item[1].bytes,
+                        reverse=True,
+                    )[:100]
+                ],
+
                 "timeseries": timeseries,
             }
 
@@ -434,5 +493,21 @@ class TrafficAggregator:
             for peer, counter in bucket.peers.items():
                 result[peer].packets += counter.packets
                 result[peer].bytes += counter.bytes
+
+        return result
+
+    @staticmethod
+    def _aggregate_peer_protocols(
+        buckets: list[TrafficBucket],
+    ) -> dict[tuple[str, str, str], TrafficCounter]:
+        result: dict[
+            tuple[str, str, str],
+            TrafficCounter,
+        ] = defaultdict(TrafficCounter)
+
+        for bucket in buckets:
+            for peer_protocol, counter in bucket.peer_protocols.items():
+                result[peer_protocol].packets += counter.packets
+                result[peer_protocol].bytes += counter.bytes
 
         return result

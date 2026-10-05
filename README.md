@@ -98,11 +98,21 @@ NetSonic/
 
 - **Discover:** scan an IPv4 subnet associated with a selected local interface and view discovered devices.
 - **Monitor:** inspect traffic rates, packet counts, protocols, directions, and top peers.
+- **Investigate:** filter traffic by protocol or peer IP, set packet-rate/bandwidth thresholds, record and replay recent sessions, and export captures as CSV or JSON.
+- **Customize:** hide or reorder dashboard panels; display preferences, alert thresholds, and saved capture history are kept in this browser.
 - **Explore topology:** view inferred relationships among the local device, gateway, and discovered devices.
 - **Sonify:** listen to network activity using selectable instrument sounds, with traffic activity driving the musical output. Audio starts only after you press **Start Audio** in the browser.
 - **Learn:** visit `/learn` for the in-app guide.
 
 The dashboard shows a first-run quick-start card with links to each stage. In the sonification controls, **Preview sample** plays a short instrument phrase for sound checking only; it is separate from live network sonification. The **LIVE TRAFFIC → SOUND** panel shows packet rate, mapped tempo, the last note, playback state, and sample velocity. To check the live mapping, start audio and generate a few pings to your gateway from another terminal, then stop and confirm playback goes silent when traffic falls to zero.
+
+## Traffic investigation tools
+
+The traffic panel can narrow its charts, summary values, and live sonification to a selected IPv4 protocol, peer IP, or both. Clear both selectors to return to the full interface view. Thresholds for packets per second and Mbps can be adjusted in the **Traffic alerts** controls; alerts are shown while the live snapshot is above either threshold.
+
+Choose **Record session** while monitoring is active to retain one-second traffic samples in this browser. Stop the recording to save it, then choose it from the session selector to inspect its time series. Sessions are local to the browser, limited to 8 saved recordings of up to 1,200 samples each, and may be cleared by removing this site's local storage. **Export CSV** and **Export JSON** download the selected recording, or the current live snapshot when no recording is selected. Exports include aggregated metadata only; packet payloads are never recorded.
+
+Use **Customize dashboard** to show or hide Discovery, Topology, Traffic, and Sonification panels and move them up or down. The arrangement is saved locally in the browser.
 
 ## Configuration
 
