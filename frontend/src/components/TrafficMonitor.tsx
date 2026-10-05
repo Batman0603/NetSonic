@@ -51,6 +51,25 @@ function formatRate(bytesPerSecond: number): string {
   return `${formatBytes(bytesPerSecond)}/s`;
 }
 
+function explainCaptureError(message: string): string {
+  const normalized = message.toLowerCase();
+  if (
+    normalized.includes("permission denied") ||
+    normalized.includes("operation not permitted") ||
+    normalized.includes("permissionerror") ||
+    normalized.includes("raw socket")
+  ) {
+    return `${message} Packet capture was blocked by operating-system permissions. Grant the backend process raw-packet capture access, then restart monitoring.`;
+  }
+  if (
+    normalized.includes("interface") &&
+    (normalized.includes("not found") || normalized.includes("down"))
+  ) {
+    return `${message} Refresh the interface list and select an active interface with an IPv4 address.`;
+  }
+  return message;
+}
+
 export function TrafficMonitor({
   interfaceName,
 }: TrafficMonitorProps) {
@@ -72,10 +91,6 @@ export function TrafficMonitor({
     status?.running === true;
 
   useEffect(() => {
-    setTraffic(null);
-    setStatus(null);
-    setErrorMessage(null);
-
     if (!interfaceName) {
       return;
     }
@@ -92,7 +107,7 @@ export function TrafficMonitor({
           && !result.running
         ) {
           setErrorMessage(
-            result.last_error,
+            explainCaptureError(result.last_error),
           );
         }
       } catch (error) {
@@ -125,10 +140,20 @@ export function TrafficMonitor({
         }
       } catch (error) {
         if (!cancelled) {
+          let captureError: string | null = null;
+          try {
+            const latestStatus = await getTrafficStatus();
+            setStatus(latestStatus);
+            if (latestStatus.last_error) {
+              captureError = explainCaptureError(latestStatus.last_error);
+            }
+          } catch {
+            // Keep the original snapshot error visible.
+          }
           setErrorMessage(
-            error instanceof Error
-              ? error.message
-              : "Unable to read traffic metrics.",
+            captureError ?? (error instanceof Error
+              ? explainCaptureError(error.message)
+              : "Unable to read traffic metrics."),
           );
         }
       }
@@ -148,7 +173,7 @@ export function TrafficMonitor({
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [isMonitoring]);
+  }, [interfaceName, isMonitoring]);
 
   async function handleStart(): Promise<void> {
     if (!interfaceName) {

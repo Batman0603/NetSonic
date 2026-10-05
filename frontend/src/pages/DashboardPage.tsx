@@ -8,6 +8,7 @@ import { TopologyView } from "../components/TopologyView";
 import { TrafficMonitor } from "../components/TrafficMonitor";
 import { SonificationPanel } from "../components/SonificationPanel";
 import { ThemeToggle } from "../components/ThemeToggle";
+import { OnboardingGuide } from "../components/OnboardingGuide";
 
 import {
   getInterfaces,
@@ -150,7 +151,9 @@ function DashboardPage() {
           </div>
         )}
 
-        <section className="interface-toolbar">
+        <OnboardingGuide hasInterface={Boolean(selectedInterface)} />
+
+        <section className="interface-toolbar" id="network-source">
           <div className="interface-toolbar-info">
             <div className="toolbar-icon">
               ⌁
@@ -242,7 +245,7 @@ function DashboardPage() {
 
           <div className="dashboard-column dashboard-right-column">
             <section className="dashboard-widget dashboard-traffic" id="traffic">
-              <TrafficMonitor interfaceName={selectedInterface} />
+              <TrafficMonitor key={selectedInterface} interfaceName={selectedInterface} />
             </section>
           </div>
         </div>
@@ -259,10 +262,6 @@ function DashboardPage() {
 
         <span>
           Local Network Intelligence
-        </span>
-
-        <span>
-          Phase 4
         </span>
       </footer>
     </div>

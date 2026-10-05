@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import cytoscape, {
   type Core,
   type ElementDefinition,
@@ -35,7 +35,7 @@ export function TopologyView({
   const [errorMessage, setErrorMessage] =
     useState<string | null>(null);
 
-  async function loadTopology(): Promise<void> {
+  const loadTopology = useCallback(async (): Promise<void> => {
     if (!interfaceName.trim()) {
       setTopology(null);
       setSelectedNode(null);
@@ -70,11 +70,12 @@ export function TopologyView({
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [interfaceName]);
 
   useEffect(() => {
-    void loadTopology();
-  }, [interfaceName]);
+    const timeout = window.setTimeout(() => void loadTopology(), 0);
+    return () => window.clearTimeout(timeout);
+  }, [loadTopology]);
 
   useEffect(() => {
     if (!containerRef.current || !topology) {

@@ -546,11 +546,14 @@ function LearnPage() {
               Instrument samples provide the sound of each note; they are not
               played as one continuous recording. The browser retriggers
               individual sampled notes while fresh packet activity is present.
-              A short repeating melodic phrase keeps the notes musical, so a
-              steady stream of traffic can sound repetitive. The drum option
-              uses a fixed kick, snare, and hi-hat pattern whose tempo and
-              velocity follow traffic. When packet activity reaches zero or
-              traffic updates become stale, note playback stops.
+              A short phrase keeps the notes musical. Its phrase pattern shifts
+              at phrase boundaries according to packet-rate, intensity, and
+              direction bands, so sustained changes in traffic can be heard
+              without making the melody random. A steady traffic pattern can
+              still sound repetitive. The drum option uses a fixed kick, snare,
+              and hi-hat pattern whose tempo and velocity follow traffic. When
+              packet activity reaches zero or traffic updates become stale,
+              note playback stops.
             </p>
 
             <div className="definition-card">
@@ -829,7 +832,7 @@ function LearnPage() {
 
             <Faq
               question="Is NetSonic just replaying an instrument sample?"
-              answer="Instrument samples supply the timbre, but NetSonic triggers separate notes from them using live traffic measurements. Packet rate controls tempo, the traffic pitch parameter selects notes in a repeating pentatonic phrase, intensity controls note velocity, and direction controls stereo position. The drum option follows a fixed kick/snare/hi-hat pattern. The sound stops when packet activity is zero or capture updates are stale."
+              answer="Instrument samples supply the timbre, but NetSonic triggers separate notes from them using live traffic measurements. Packet rate controls tempo, the traffic pitch parameter selects notes in a pentatonic phrase, and phrase patterns shift with packet-rate, intensity, and direction bands. Intensity controls note velocity, and direction controls stereo position. The drum option follows a fixed kick/snare/hi-hat pattern. The sound stops when packet activity is zero or capture updates are stale. Use Preview sample to hear the selected instrument without live traffic."
             />
 
             <Faq

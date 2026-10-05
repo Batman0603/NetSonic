@@ -102,6 +102,8 @@ NetSonic/
 - **Sonify:** listen to network activity using selectable instrument sounds, with traffic activity driving the musical output. Audio starts only after you press **Start Audio** in the browser.
 - **Learn:** visit `/learn` for the in-app guide.
 
+The dashboard shows a first-run quick-start card with links to each stage. In the sonification controls, **Preview sample** plays a short instrument phrase for sound checking only; it is separate from live network sonification. The **LIVE TRAFFIC → SOUND** panel shows packet rate, mapped tempo, the last note, playback state, and sample velocity. To check the live mapping, start audio and generate a few pings to your gateway from another terminal, then stop and confirm playback goes silent when traffic falls to zero.
+
 ## Configuration
 
 Copy the templates before changing local settings:
@@ -134,7 +136,13 @@ For request and response details, use the interactive [API docs](http://127.0.0.
 
 ## How the audio follows traffic
 
-NetSonic uses sampled instrument sounds as the timbre for individual notes; it does not play one continuous sample recording. While fresh captured traffic is present, the browser triggers instrument notes in a short repeating phrase. Packet rate controls tempo, the backend's traffic pitch parameter selects the next note within a pentatonic scale, traffic intensity controls note velocity, and inbound/outbound direction controls stereo position. The drums option uses a fixed kick, snare, and hi-hat pattern, with tempo and velocity responding to traffic. Playback becomes silent when the measured packet rate is zero or capture updates stop arriving. A steady traffic pattern can therefore sound repetitive even though the note events are driven by live measurements.
+NetSonic uses sampled instrument sounds as the timbre for individual notes; it does not play one continuous sample recording. While fresh captured traffic is present, the browser triggers instrument notes in short phrases. Packet rate controls tempo, the backend's traffic pitch parameter selects notes within a pentatonic scale, traffic intensity controls note velocity, and inbound/outbound direction controls stereo position. Phrase patterns shift at phrase boundaries using traffic-rate, intensity, and direction bands, keeping the notes musical while making sustained traffic changes audible. The drums option uses a fixed kick, snare, and hi-hat pattern, with tempo and velocity responding to traffic. Playback becomes silent when the measured packet rate is zero or capture updates stop arriving. A steady traffic pattern can still sound repetitive.
+
+Use **Preview sample** to audition the selected instrument independently of traffic. Use **LIVE TRAFFIC → SOUND** to verify live playback: it shows the measured packet rate, mapped tempo, latest note, note velocity, and whether capture updates have gone stale.
+
+## Automated checks
+
+GitHub Actions runs the backend test suite and the frontend lint/build checks on pushes and pull requests. Run those same commands locally with the optional checks above before opening a change.
 
 ## Permissions, privacy, and audio
 

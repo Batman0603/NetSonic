@@ -265,8 +265,116 @@
   border-color: #393b46;
 }
 
+:root[data-theme="dark"] .dashboard-shell .sonification-panel {
+  color: #e2e4ec;
+}
+
+:root[data-theme="dark"] .dashboard-shell .sonification-description,
+:root[data-theme="dark"] .dashboard-shell .sonification-interface-label,
+:root[data-theme="dark"] .dashboard-shell .sonification-instrument-control,
+:root[data-theme="dark"] .dashboard-shell .instrument-load-status,
+:root[data-theme="dark"] .dashboard-shell .sonification-client-count,
+:root[data-theme="dark"] .dashboard-shell .sonification-live-indicator,
+:root[data-theme="dark"] .dashboard-shell .sonification-visualizer-header > div:first-child span,
+:root[data-theme="dark"] .dashboard-shell .sonification-sound-guide-heading small,
+:root[data-theme="dark"] .dashboard-shell .sonification-sound-guide-item span,
+:root[data-theme="dark"] .dashboard-shell .sonification-traffic-link-heading span:not(.traffic-playback-state),
+:root[data-theme="dark"] .dashboard-shell .sonification-traffic-link-grid span,
+:root[data-theme="dark"] .dashboard-shell .sonification-traffic-link > small,
+:root[data-theme="dark"] .dashboard-shell .sonification-summary-card span,
+:root[data-theme="dark"] .dashboard-shell .sonification-metric span {
+  color: #b0b4c1;
+}
+
+:root[data-theme="dark"] .dashboard-shell .sonification-interface-control strong,
+:root[data-theme="dark"] .dashboard-shell .sonification-visualizer-header > div:first-child strong,
+:root[data-theme="dark"] .dashboard-shell .sonification-sound-guide-heading > span,
+:root[data-theme="dark"] .dashboard-shell .sonification-sound-guide-item strong,
+:root[data-theme="dark"] .dashboard-shell .sonification-traffic-link-heading strong,
+:root[data-theme="dark"] .dashboard-shell .sonification-traffic-link-grid strong,
+:root[data-theme="dark"] .dashboard-shell .sonification-summary-card strong,
+:root[data-theme="dark"] .dashboard-shell .sonification-metric strong {
+  color: #ececf2;
+}
+
+:root[data-theme="dark"] .dashboard-shell .traffic-playback-state {
+  color: #c2c5d0;
+}
+
+:root[data-theme="dark"] .dashboard-shell .traffic-playback-state.is-playing {
+  color: #54d694;
+}
+
+:root[data-theme="dark"] .dashboard-shell .sonification-instrument-control select {
+  background: #202127;
+  border-color: #464854;
+  color: #e7e8ee;
+}
+
+:root[data-theme="dark"] .dashboard-shell .sonification-instrument-control a,
+:root[data-theme="dark"] .dashboard-shell .instrument-load-status a {
+  color: #9fd7ff;
+}
+
+:root[data-theme="dark"] .dashboard-shell .sonification-traffic-link-grid > div {
+  background: #202127;
+  border-color: #454752;
+}
+
+:root[data-theme="dark"] .dashboard-shell .sonification-sound-guide-item {
+  border-left-color: #20c6dc;
+}
+
+:root[data-theme="dark"] .dashboard-shell .sonification-traffic-link {
+  border-color: #414652;
+}
+
 :root[data-theme="dark"] .dashboard-shell .sonification-button-primary {
   background: #7545dc;
+}
+
+:root[data-theme="dark"] .dashboard-shell .sonification-button-preview {
+  border-color: #4a4d59;
+  background: #292b34;
+  color: #dedfe7;
+}
+
+:root[data-theme="dark"] .dashboard-shell .sonification-button-preview:hover:not(:disabled) {
+  border-color: #9b72ef;
+  background: #342944;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .dashboard-shell .onboarding-guide {
+  background: #202127;
+  border-color: #393b46;
+  border-left-color: #9b72ef;
+}
+
+:root[data-theme="dark"] .dashboard-shell .onboarding-guide-heading h2,
+:root[data-theme="dark"] .dashboard-shell .onboarding-steps li strong {
+  color: #e4e5eb;
+}
+
+:root[data-theme="dark"] .dashboard-shell .onboarding-guide-heading p:last-child,
+:root[data-theme="dark"] .dashboard-shell .onboarding-tip {
+  color: #a1a4b1;
+}
+
+:root[data-theme="dark"] .dashboard-shell .onboarding-guide-heading button,
+:root[data-theme="dark"] .dashboard-shell .onboarding-steps li {
+  background: #25272f;
+  border-color: #393b46;
+  color: #d4d5de;
+}
+
+:root[data-theme="dark"] .dashboard-shell .onboarding-steps li.is-ready {
+  background: #1b3028;
+  border-color: #315541;
+}
+
+:root[data-theme="dark"] .dashboard-shell .onboarding-steps li a {
+  color: #c4a5ff;
 }
 
 :root[data-theme="dark"] .dashboard-shell .app-footer {

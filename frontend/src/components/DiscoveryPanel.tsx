@@ -51,7 +51,8 @@ export function DiscoveryPanel() {
   }
 
   useEffect(() => {
-    void loadInitialData();
+    const timeout = window.setTimeout(() => void loadInitialData(), 0);
+    return () => window.clearTimeout(timeout);
   }, []);
 
   function handleInterfaceChange(interfaceName: string): void {

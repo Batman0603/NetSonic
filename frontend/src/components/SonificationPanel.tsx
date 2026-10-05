@@ -48,7 +48,12 @@ const SOUND_INSTRUMENTS: { value: SoundInstrument; label: string }[] = [
 const MASTER_VOLUME = 0.8;
 
 const PENTATONIC_MIDI = [60, 62, 64, 67, 69, 72, 74, 76, 79, 81];
-const MELODY_STEPS = [0, 2, 4, 2, 1, 2, 4, 0];
+const MELODY_PATTERNS = [
+  [0, 2, 4, 2, 1, 2, 4, 0],
+  [0, 1, 3, 2, 4, 3, 1, 0],
+  [0, 2, 1, 3, 4, 2, 3, 0],
+  [0, 3, 4, 1, 2, 4, 3, 0],
+];
 const NOTE_NAMES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
 
 function clamp(
@@ -74,13 +79,13 @@ function midiNoteName(note: number): string {
   return `${NOTE_NAMES[note % 12]}${Math.floor(note / 12) - 1}`;
 }
 
-function getNoteFromTrafficPitch(pitchHz: number, phrasePosition: number): number {
+function getNoteFromTrafficPitch(pitchHz: number, scaleOffset: number): number {
   const midiPitch = 69 + 12 * Math.log2(clamp(pitchHz, 220, 880) / 440);
   const rootIndex = PENTATONIC_MIDI.reduce(
     (best, note, index) => Math.abs(note - midiPitch) < Math.abs(PENTATONIC_MIDI[best] - midiPitch) ? index : best,
     0,
   );
-  const phraseIndex = rootIndex + MELODY_STEPS[phrasePosition];
+  const phraseIndex = rootIndex + scaleOffset;
   return PENTATONIC_MIDI[phraseIndex % PENTATONIC_MIDI.length]
     + 12 * Math.floor(phraseIndex / PENTATONIC_MIDI.length);
 }
@@ -234,6 +239,7 @@ export function SonificationPanel({
 
   const instrumentPlayersRef = useRef(new Map<SoundInstrument, Smplr>());
   const instrumentLoadsRef = useRef(new Map<SoundInstrument, Promise<Smplr>>());
+  const [readyInstruments, setReadyInstruments] = useState<SoundInstrument[]>([]);
   const drumMachineRef = useRef<ReturnType<typeof DrumMachine> | null>(null);
   const drumMappingErrorRef = useRef(false);
   const [instrumentLoading, setInstrumentLoading] = useState(false);
@@ -257,13 +263,18 @@ export function SonificationPanel({
 
   const latestPacketRateRef = useRef(0);
   const lastTrafficUpdateAtRef = useRef(0);
+  const [trafficUpdateStale, setTrafficUpdateStale] = useState(false);
   const [playedNote, setPlayedNote] = useState<{ note: string; velocity: number; bpm: number } | null>(null);
+  const [instrumentPreviewing, setInstrumentPreviewing] = useState(false);
+  const previewTimeoutRef = useRef<number | null>(null);
 
   const audioEnabledRef =
     useRef(false);
 
   const melodyStepRef =
     useRef(0);
+
+  const melodyPatternRef = useRef(0);
 
   const [instrument, setInstrument] = useState<SoundInstrument>(() => {
     const saved = localStorage.getItem("netsonic.sound.instrument");
@@ -340,7 +351,7 @@ export function SonificationPanel({
 
   useEffect(
     () => {
-      void updateStatus();
+      const initialStatusTimeout = window.setTimeout(() => void updateStatus(), 0);
 
       const interval =
         window.setInterval(
@@ -351,6 +362,7 @@ export function SonificationPanel({
         );
 
       return () => {
+        window.clearTimeout(initialStatusTimeout);
         window.clearInterval(
           interval,
         );
@@ -439,6 +451,7 @@ export function SonificationPanel({
         drumMachineRef.current = null;
         instrumentPlayersRef.current.clear();
         instrumentLoadsRef.current.clear();
+        setReadyInstruments([]);
 
         if (context) {
           try {
@@ -479,6 +492,12 @@ export function SonificationPanel({
   const createAudioEngine =
     useCallback(
       async () => {
+        const existingContext = audioContextRef.current;
+        if (existingContext && existingContext.state !== "closed") {
+          await existingContext.resume();
+          return;
+        }
+
         const AudioContextClass =
           window.AudioContext ||
           (
@@ -633,6 +652,9 @@ export function SonificationPanel({
 
     const loading = player.ready.then(() => {
       instrumentPlayersRef.current.set(selected, player);
+      setReadyInstruments((current) =>
+        current.includes(selected) ? current : [...current, selected],
+      );
       if (loadingInstrumentRef.current === selected) {
         setSampleLoadProgress({ loaded: 1, total: 1 });
       }
@@ -653,6 +675,66 @@ export function SonificationPanel({
     instrumentLoadsRef.current.set(selected, loading);
     return loading;
   }, []);
+
+  const previewInstrument = useCallback(async () => {
+    if (instrumentPreviewing || instrumentLoading) return;
+
+    setError(null);
+    setInstrumentLoading(true);
+
+    try {
+      await createAudioEngine();
+      const player = await loadInstrument(instrument);
+      const context = audioContextRef.current;
+      if (!context) throw new Error("Audio engine is not ready.");
+
+      const startsAt = context.currentTime + 0.08;
+      if (instrument === "drums") {
+        const drumPlayer = drumMachineRef.current;
+        if (!drumPlayer) throw new Error("Drum samples are not ready.");
+        const groups = drumPlayer.getGroupNames();
+        const findGroup = (parts: string[]) => groups.find((name) => {
+          const normalized = name.toLowerCase().replace(/[^a-z]/g, "");
+          return parts.some((part) => normalized.includes(part));
+        });
+        const kick = findGroup(["kick", "bass"]) ?? groups[0];
+        const snare = findGroup(["snare", "clap"]);
+        const hat = findGroup(["closedhihat", "closedhat", "hat", "cymbal"]);
+        [kick, hat, snare, hat].forEach((group, index) => {
+          if (group) {
+            drumPlayer.start({
+              note: group,
+              time: startsAt + index * 0.24,
+              velocity: 96,
+            });
+          }
+        });
+      } else {
+        const previewNotes = [60, 64, 67, 72, 67, 64];
+        previewNotes.forEach((note, index) => {
+          player.start({
+            note,
+            time: startsAt + index * 0.24,
+            velocity: 96,
+            duration: 0.21,
+          });
+        });
+      }
+
+      setInstrumentPreviewing(true);
+      if (previewTimeoutRef.current !== null) {
+        window.clearTimeout(previewTimeoutRef.current);
+      }
+      previewTimeoutRef.current = window.setTimeout(() => {
+        setInstrumentPreviewing(false);
+        previewTimeoutRef.current = null;
+      }, 1800);
+    } catch (previewError) {
+      setError(previewError instanceof Error ? previewError.message : "Unable to preview this instrument.");
+    } finally {
+      setInstrumentLoading(false);
+    }
+  }, [createAudioEngine, instrument, instrumentLoading, instrumentPreviewing, loadInstrument]);
 
   const triggerPulse =
     useCallback(
@@ -677,9 +759,11 @@ export function SonificationPanel({
         const packetsPerSecond = latestPacketRateRef.current;
         const updateIsFresh = Date.now() - lastTrafficUpdateAtRef.current < 3000;
         if (packetsPerSecond <= 0 || !updateIsFresh) {
+          setTrafficUpdateStale(!updateIsFresh && lastTrafficUpdateAtRef.current > 0);
           setPlayedNote(null);
           return;
         }
+        setTrafficUpdateStale(false);
 
         const intensity =
           clamp(
@@ -688,7 +772,6 @@ export function SonificationPanel({
             1,
           );
 
-        const phrasePosition = melodyStepRef.current % MELODY_STEPS.length;
         const selectedInstrument = instrumentRef.current;
         const player = instrumentPlayersRef.current.get(selectedInstrument);
         if (!player) return;
@@ -697,6 +780,18 @@ export function SonificationPanel({
 
         const velocity = Math.round(clamp(82 + Math.sqrt(intensity) * 40, 82, 120));
         const bpm = getTempoFromPacketRate(packetsPerSecond);
+        const phrasePosition = melodyStepRef.current % 8;
+        if (phrasePosition === 0) {
+          const rateBand = Math.floor(Math.log2(1 + packetsPerSecond));
+          const directionBand = parameters.direction === "inbound"
+            ? 1
+            : parameters.direction === "outbound"
+              ? 2
+              : 0;
+          const loadBand = Math.floor(intensity * 4);
+          melodyPatternRef.current =
+            (rateBand + directionBand + loadBand) % MELODY_PATTERNS.length;
+        }
 
         if (selectedInstrument === "drums") {
           const drumPlayer = drumMachineRef.current;
@@ -731,7 +826,11 @@ export function SonificationPanel({
           return;
         }
 
-        const midiNote = getNoteFromTrafficPitch(parameters.pitch_hz, phrasePosition);
+        const melodyPattern = MELODY_PATTERNS[melodyPatternRef.current];
+        const midiNote = getNoteFromTrafficPitch(
+          parameters.pitch_hz,
+          melodyPattern[phrasePosition],
+        );
         try {
           player.start({
             note: midiNote,
@@ -770,6 +869,9 @@ export function SonificationPanel({
 
             const packetRate = latestPacketRateRef.current;
             const freshTraffic = Date.now() - lastTrafficUpdateAtRef.current < 3000;
+            setTrafficUpdateStale(
+              lastTrafficUpdateAtRef.current > 0 && !freshTraffic,
+            );
             const beatsPerMinute = freshTraffic ? getTempoFromPacketRate(packetRate) : 76;
             const interval = 60_000 / beatsPerMinute / 2;
 
@@ -801,6 +903,7 @@ export function SonificationPanel({
         setLatestUpdate(
           update,
         );
+        setTrafficUpdateStale(false);
 
         latestParametersRef.current =
           update.parameters;
@@ -952,6 +1055,7 @@ export function SonificationPanel({
           }
           instrumentPlayersRef.current.clear();
           instrumentLoadsRef.current.clear();
+          setReadyInstruments([]);
           drumMachineRef.current = null;
 
           if (context) {
@@ -987,7 +1091,13 @@ export function SonificationPanel({
 
   useEffect(
     () => {
+      const instrumentPlayers = instrumentPlayersRef.current;
+      const instrumentLoads = instrumentLoadsRef.current;
       return () => {
+        if (previewTimeoutRef.current !== null) {
+          window.clearTimeout(previewTimeoutRef.current);
+          previewTimeoutRef.current = null;
+        }
         audioEnabledRef.current =
           false;
 
@@ -998,11 +1108,11 @@ export function SonificationPanel({
         const context =
           audioContextRef.current;
 
-        for (const player of instrumentPlayersRef.current.values()) {
+        for (const player of instrumentPlayers.values()) {
           player.dispose();
         }
-        instrumentPlayersRef.current.clear();
-        instrumentLoadsRef.current.clear();
+        instrumentPlayers.clear();
+        instrumentLoads.clear();
         drumMachineRef.current = null;
 
         if (context) {
@@ -1146,7 +1256,7 @@ export function SonificationPanel({
             <small>
               {instrumentLoading
                 ? `Loading ${SOUND_INSTRUMENTS.find((item) => item.value === instrument)?.label} samples${sampleLoadProgress.total > 0 ? ` · ${sampleLoadProgress.loaded}/${sampleLoadProgress.total}` : "…"}`
-                : instrumentPlayersRef.current.has(instrument)
+                : readyInstruments.includes(instrument)
                   ? "Instrument samples ready"
                   : "Samples load when audio starts"}
             </small>
@@ -1163,6 +1273,19 @@ export function SonificationPanel({
         </label>
 
         <div className="sonification-actions">
+          <button
+            type="button"
+            className="sonification-button sonification-button-preview"
+            onClick={() => void previewInstrument()}
+            disabled={instrumentLoading || instrumentPreviewing || audioEnabled}
+            title="Plays a fixed instrument phrase without using network traffic; available while live audio is stopped"
+          >
+            {instrumentLoading
+              ? "Loading sample…"
+              : instrumentPreviewing
+                ? "Preview playing…"
+                : "Preview sample"}
+          </button>
           {!audioEnabled ? (
             <button
               type="button"
@@ -1170,7 +1293,7 @@ export function SonificationPanel({
               onClick={() => {
                 void startAudio();
               }}
-              disabled={!interfaceName}
+              disabled={!interfaceName || instrumentLoading || instrumentPreviewing}
             >
               Start Audio
             </button>
@@ -1280,7 +1403,13 @@ export function SonificationPanel({
             <span>Playback is driven by the latest packet capture, not a free-running melody.</span>
           </div>
           <span className={`traffic-playback-state ${playedNote ? "is-playing" : ""}`}>
-            {playedNote ? "PLAYING" : packetsPerSecond > 0 ? "WAITING FOR NOTE" : "NO PACKETS · SILENT"}
+            {trafficUpdateStale
+              ? "CAPTURE STALE"
+              : playedNote
+                ? "PLAYING"
+                : packetsPerSecond > 0
+                  ? "WAITING FOR NOTE"
+                  : "NO PACKETS · SILENT"}
           </span>
         </div>
         <div className="sonification-traffic-link-grid">
@@ -1302,7 +1431,7 @@ export function SonificationPanel({
           </div>
         </div>
         <small>
-          Notes stop when packet activity is zero or capture updates stop. Drums follow a fixed kick/snare/hi-hat pattern at the measured tempo.
+          To verify the live mapping, start audio and ping your gateway from another terminal: packet rate, tempo, and last note should respond. Stop the pings and playback should fall silent when traffic reaches zero. “Preview sample” plays a separate fixed phrase for instrument checking only.
         </small>
       </div>
 

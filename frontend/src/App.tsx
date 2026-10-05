@@ -7,7 +7,7 @@ import {
 
 import DashboardPage from "./pages/DashboardPage";
 import LearnPage from "./pages/LearnPage";
-import { ThemeProvider } from "./contexts/ThemeContext";
+import { ThemeProvider } from "./contexts/ThemeProvider";
 
 function App() {
   return (
