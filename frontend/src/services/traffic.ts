@@ -1,3 +1,4 @@
+/** Traffic API origin. Keep in sync with the backend's local development URL. */
 const API_BASE_URL = "http://127.0.0.1:8000/api";
 
 export interface TrafficProtocolStat {
@@ -24,6 +25,7 @@ export interface TrafficPeerProtocolStat extends TrafficPeerStat {
 }
 
 export interface TrafficFilters {
+  /** Optional UI filters; empty strings mean the complete capture. */
   protocol: string;
   peerIp: string;
 }
@@ -108,6 +110,7 @@ async function request(
   }
 }
 
+/** Start capture on a named interface; reject blank interface names. */
 export async function startTrafficMonitoring(
   interfaceName: string,
 ): Promise<void> {
@@ -174,6 +177,7 @@ export async function getTrafficStatus(): Promise<TrafficStatus> {
   }
 }
 
+/** Read aggregate counters and time series for the requested rolling window. */
 export async function getTrafficSnapshot(
   interfaceName: string,
   windowSeconds = 60,

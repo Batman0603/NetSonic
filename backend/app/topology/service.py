@@ -54,6 +54,11 @@ class TopologyService:
         self.db = db
 
     def build_topology(self, interface_name: str) -> TopologyResponse:
+        """Build nodes and inferred logical edges for one active interface.
+
+        A gateway edge reflects routing and subnet membership, not a measured
+        physical link between devices.
+        """
         interface = self._get_interface(interface_name)
 
         gateway_ip = self._get_default_gateway(interface_name)

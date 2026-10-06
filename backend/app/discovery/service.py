@@ -1,3 +1,10 @@
+"""Validate discovery requests, run ARP scans, and persist device observations.
+
+The service is the boundary between interface/subnet validation, the scanner,
+and the device inventory. Scans are limited to a subnet on the selected local
+interface; database failures roll back the whole result set.
+"""
+
 import ipaddress
 import logging
 import socket
@@ -17,12 +24,12 @@ from app.models.device import Device
 
 logger = logging.getLogger(__name__)
 
-
 class DiscoveryServiceError(Exception):
     """Raised when discovery validation or persistence fails."""
 
 
 def _find_interface(interface_name: str) -> InterfaceInfo:
+    """Return the named IPv4 interface, rejecting missing or down interfaces."""
     interfaces = list_ipv4_interfaces()
 
     for interface in interfaces:
@@ -51,6 +58,7 @@ def _validate_subnet(
     requested_subnet: str | None,
     interface: InterfaceInfo,
 ) -> ipaddress.IPv4Network:
+    """Resolve and constrain a requested network to the interface's subnet."""
     try:
         interface_network = ipaddress.ip_network(interface.cidr, strict=False)
 
@@ -90,6 +98,7 @@ def _upsert_device(
     host: DiscoveredHost,
     observed_at: datetime,
 ) -> Device:
+    """Insert a new observation or refresh the saved device's current fields."""
     device = db.scalar(
         select(Device).where(Device.ip_address == host.ip_address)
     )
@@ -120,7 +129,12 @@ def discover_devices(
     interface_name: str,
     requested_subnet: str | None = None,
 ) -> tuple[str, list[Device]]:
-    """Scan a validated subnet and persist responding devices."""
+    """Scan an authorized local range and return its CIDR plus saved devices.
+
+    ``requested_subnet`` may be omitted to scan the interface's full network.
+    The subnet validator enforces the supported IPv4 range before any packets
+    are sent. Successful observations are committed together.
+    """
 
     interface = _find_interface(interface_name)
     subnet = _validate_subnet(requested_subnet, interface)

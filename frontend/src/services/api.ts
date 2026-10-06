@@ -1,3 +1,4 @@
+/** Shared API origin for simple health and connectivity checks. */
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
@@ -8,6 +9,7 @@ export interface HealthResponse {
 }
 
 export class ApiError extends Error {
+  /** Error returned by the API client, with an HTTP code when available. */
   readonly statusCode?: number;
 
   constructor(
@@ -20,6 +22,7 @@ export class ApiError extends Error {
   }
 }
 
+/** Check backend reachability and validate its JSON response. */
 export async function getHealth(): Promise<HealthResponse> {
   let response: Response;
 

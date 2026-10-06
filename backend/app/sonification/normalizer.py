@@ -10,6 +10,7 @@ def clamp(
     minimum: float = 0.0,
     maximum: float = 1.0,
 ) -> float:
+    """Constrain a number to an inclusive interval."""
     return max(minimum, min(value, maximum))
 
 
@@ -33,6 +34,7 @@ class AdaptiveNormalizer:
         self._minimum_reference = minimum_reference
 
     def update(self, value: float) -> float:
+        """Add a sample and return its log-scaled rolling percentile ratio."""
         safe_value = max(0.0, float(value))
 
         self._history.append(safe_value)
@@ -67,6 +69,7 @@ class AdaptiveNormalizer:
         )
 
     def reset(self) -> None:
+        """Discard samples collected for the current capture session."""
         self._history.clear()
 
     @property
@@ -79,6 +82,7 @@ def normalize_linear(
     minimum: float,
     maximum: float,
 ) -> float:
+    """Scale a value linearly to 0–1, returning zero for invalid ranges."""
     if maximum <= minimum:
         return 0.0
 

@@ -1,3 +1,4 @@
+/** HTTP origin used for sonification controls and status. */
 const API_BASE_URL = "http://127.0.0.1:8000/api";
 
 export interface SonificationParameters {
@@ -52,6 +53,7 @@ export interface TimeSeriesPoint {
 }
 
 export interface SonificationUpdate {
+  /** One backend stream message containing mapped audio and traffic metadata. */
   type: "sonification_update";
   timestamp: string;
   interface_name: string;
@@ -127,6 +129,7 @@ export async function getSonificationStatus(): Promise<SonificationStatus> {
   );
 }
 
+/** Open the live update stream; the caller owns reconnection and cleanup. */
 export function createSonificationWebSocket(): WebSocket {
   const websocketUrl =
     "ws://127.0.0.1:8000/api/sonification/stream";

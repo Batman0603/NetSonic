@@ -11,6 +11,7 @@ from scapy.layers.inet import IP
 
 @dataclass
 class TrafficCounter:
+    """Packet and byte totals for one aggregation key."""
     packets: int = 0
     bytes: int = 0
 
@@ -21,6 +22,7 @@ class TrafficCounter:
 
 @dataclass
 class TrafficBucket:
+    """Per-second packet totals split by protocol, direction, and peer."""
     timestamp: datetime
 
     packets: int = 0
@@ -43,6 +45,7 @@ class TrafficBucket:
 
 
 def classify_protocol(protocol_number: int) -> str:
+    """Convert an IPv4 protocol number to a familiar name or OTHER label."""
     protocol_map = {
         1: "ICMP",
         6: "TCP",
@@ -60,6 +63,7 @@ def classify_direction(
     destination_ip: str,
     local_ip: str,
 ) -> str:
+    """Classify a packet relative to the monitored interface's IPv4 address."""
     if source_ip == local_ip and destination_ip == local_ip:
         return "local"
 
@@ -118,6 +122,7 @@ class TrafficAggregator:
             self._local_ip = ""
 
     def process_packet(self, packet: Any) -> None:
+        """Aggregate IPv4 metadata into its UTC-second bucket; retain no payload."""
         if not packet.haslayer(IP):
             return
 
@@ -190,6 +195,12 @@ class TrafficAggregator:
         self,
         window_seconds: int = 60,
     ) -> dict[str, Any]:
+        """Summarize recent buckets into rates, breakdowns, and time-series data.
+
+        The requested window is clamped to the retained history. Rates use the
+        observed bucket span when available, avoiding division by an idle full
+        window immediately after capture starts.
+        """
         window_seconds = max(
             1,
             min(

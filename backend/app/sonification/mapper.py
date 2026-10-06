@@ -11,6 +11,11 @@ from app.sonification.normalizer import (
 
 @dataclass(frozen=True)
 class SonificationParameters:
+    """Normalized controls consumed by the sonification output layer.
+
+    Frequency, volume, pulse rate, and pan are bounded scalar values; protocol
+    and direction retain the categorical source used to derive those controls.
+    """
     pitch_hz: float
     volume: float
     pulse_rate_hz: float
@@ -51,6 +56,7 @@ class SonificationMapper:
         protocol: str = "TCP",
         direction: str = "inbound",
     ) -> SonificationParameters:
+        """Map rates and categories into stable, bounded audio controls."""
         total_mbps = max(
             0.0,
             float(upload_mbps),
@@ -175,6 +181,7 @@ class SonificationMapper:
         return "sine"
 
     def reset(self) -> None:
+        """Clear adaptive history so a new capture starts with fresh scaling."""
         self._traffic_normalizer.reset()
         self._packet_normalizer.reset()
 
@@ -182,6 +189,7 @@ class SonificationMapper:
         self,
         snapshot: dict[str, Any],
     ) -> dict[str, Any]:
+        """Map an aggregator snapshot and preserve its summary series for clients."""
         upload_mbps = float(
             snapshot.get(
                 "upload_mbps",

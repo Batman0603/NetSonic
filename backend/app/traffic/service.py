@@ -19,8 +19,10 @@ logger = logging.getLogger(__name__)
 
 
 class TrafficMonitor:
-    """
-    Coordinates packet capture and traffic aggregation.
+    """Coordinate packet capture and traffic aggregation.
+
+    Capture callbacks run outside request handlers, so lifecycle state and
+    errors are protected for concurrent API access.
     """
 
     def __init__(self) -> None:

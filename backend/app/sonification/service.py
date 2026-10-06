@@ -15,12 +15,13 @@ logger = logging.getLogger(__name__)
 
 
 class SonificationService:
-    """
-    Coordinates real-time traffic sonification updates.
+    """Coordinate real-time traffic sonification updates.
 
     Traffic metrics are obtained from the Phase 3 traffic monitor,
     converted into sonification parameters, and streamed to
     connected WebSocket clients.
+
+    Audio playback itself is user initiated and runs in the browser.
     """
 
     UPDATE_INTERVAL_SECONDS = 0.1

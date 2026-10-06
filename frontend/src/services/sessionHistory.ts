@@ -5,6 +5,7 @@ const MAX_SESSIONS = 8;
 const MAX_SAMPLES_PER_SESSION = 1200;
 
 export interface TrafficHistorySession {
+  /** A browser-local recording of bounded, aggregated traffic samples. */
   id: string;
   name: string;
   interfaceName: string;
@@ -13,6 +14,7 @@ export interface TrafficHistorySession {
   samples: TrafficTimePoint[];
 }
 
+/** Read saved sessions; malformed or unavailable storage yields no history. */
 export function loadTrafficSessions(): TrafficHistorySession[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -24,12 +26,14 @@ export function loadTrafficSessions(): TrafficHistorySession[] {
   }
 }
 
+/** Save newest first and retain at most the configured session limit. */
 export function saveTrafficSession(session: TrafficHistorySession): void {
   const sessions = [session, ...loadTrafficSessions()]
     .slice(0, MAX_SESSIONS);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
 }
 
+/** Copy the latest sample while bounding peer/protocol detail for storage. */
 export function createHistorySample(
   snapshot: TrafficSnapshot,
 ): TrafficTimePoint | null {
