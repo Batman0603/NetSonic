@@ -10,6 +10,7 @@ import { TrafficMonitor } from "../components/TrafficMonitor";
 import { SonificationPanel } from "../components/SonificationPanel";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { OnboardingGuide } from "../components/OnboardingGuide";
+import { NetworkInsights } from "../components/NetworkInsights";
 
 type DashboardPanel = "discovery" | "topology" | "traffic" | "sonification";
 interface DashboardLayout {
@@ -127,6 +128,50 @@ function DashboardPage() {
 
     void loadInterfaces();
   }, []);
+
+  const visiblePanels = dashboardLayout.order
+    .filter((panel) => dashboardLayout.visible[panel])
+    .filter((panel) => panel !== "sonification" || Boolean(selectedInterface));
+
+  function renderPanel(panel: DashboardPanel) {
+    if (panel === "discovery") {
+      return (
+        <section className="dashboard-widget dashboard-discovery" id="discovery" key={panel}>
+          <DiscoveryPanel />
+        </section>
+      );
+    }
+    if (panel === "topology") {
+      return selectedInterface ? (
+        <section className="dashboard-widget dashboard-topology" id="topology" key={panel}>
+          <TopologyView interfaceName={selectedInterface} />
+        </section>
+      ) : (
+        <section className="dashboard-widget dashboard-empty" id="topology" key={panel}>
+          <div className="empty-icon">⌁</div>
+          <h3>No network interface selected</h3>
+          <p>Select an active interface above to build the topology and start traffic sonification.</p>
+        </section>
+      );
+    }
+    if (panel === "traffic") {
+      return (
+        <section className="dashboard-widget dashboard-traffic" id="traffic" key={panel}>
+          <TrafficMonitor
+            key={selectedInterface}
+            interfaceName={selectedInterface}
+            filters={trafficFilters}
+            onFiltersChange={setTrafficFilters}
+          />
+        </section>
+      );
+    }
+    return (
+      <section className="dashboard-widget dashboard-sonification" id="sonification" key={panel}>
+        <SonificationPanel interfaceName={selectedInterface} filters={trafficFilters} />
+      </section>
+    );
+  }
 
   return (
     <div className="app dashboard-shell">
@@ -317,48 +362,13 @@ function DashboardPage() {
         </section>
 
         <div className="dashboard-grid">
-          {dashboardLayout.order
-            .filter((panel) => dashboardLayout.visible[panel])
-            .filter((panel) => panel !== "sonification" || Boolean(selectedInterface))
-            .map((panel) => {
-              if (panel === "discovery") {
-                return (
-                  <section className="dashboard-widget dashboard-discovery" id="discovery" key={panel}>
-                    <DiscoveryPanel />
-                  </section>
-                );
-              }
-              if (panel === "topology") {
-                return selectedInterface ? (
-                  <section className="dashboard-widget dashboard-topology" id="topology" key={panel}>
-                    <TopologyView interfaceName={selectedInterface} />
-                  </section>
-                ) : (
-                  <section className="dashboard-widget dashboard-empty" id="topology" key={panel}>
-                    <div className="empty-icon">⌁</div>
-                    <h3>No network interface selected</h3>
-                    <p>Select an active interface above to build the topology and start traffic sonification.</p>
-                  </section>
-                );
-              }
-              if (panel === "traffic") {
-                return (
-                  <section className="dashboard-widget dashboard-traffic" id="traffic" key={panel}>
-                    <TrafficMonitor
-                      key={selectedInterface}
-                      interfaceName={selectedInterface}
-                      filters={trafficFilters}
-                      onFiltersChange={setTrafficFilters}
-                    />
-                  </section>
-                );
-              }
-              return (
-                <section className="dashboard-widget dashboard-sonification" id="sonification" key={panel}>
-                  <SonificationPanel interfaceName={selectedInterface} filters={trafficFilters} />
-                </section>
-              );
-            })}
+          {visiblePanels.filter((panel) => panel === "discovery" || panel === "topology").map(renderPanel)}
+        </div>
+
+        <NetworkInsights interfaceName={selectedInterface} />
+
+        <div className="dashboard-grid">
+          {visiblePanels.filter((panel) => panel === "traffic" || panel === "sonification").map(renderPanel)}
         </div>
       </main>
 

@@ -277,11 +277,15 @@
 
 .dashboard-discovery,
 .dashboard-topology {
-  grid-column: span 5;
+  grid-column: span 6;
 }
 
 .dashboard-traffic {
-  grid-column: span 7;
+  grid-column: 1 / -1;
+}
+
+.dashboard-grid > :only-child {
+  grid-column: 1 / -1;
 }
 
 .dashboard-sonification {

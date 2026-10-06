@@ -426,6 +426,144 @@
   color: #e4e5eb;
 }
 
+:root[data-theme="dark"] .dashboard-shell .insight-card {
+  background: #202127;
+  border-color: #343640;
+  color: #e4e5eb;
+}
+
+:root[data-theme="dark"] .dashboard-shell .insight-heading h2,
+:root[data-theme="dark"] .dashboard-shell .health-score strong,
+:root[data-theme="dark"] .dashboard-shell .health-metrics strong,
+:root[data-theme="dark"] .dashboard-shell .alert-list li strong {
+  color: #e4e5eb;
+}
+
+:root[data-theme="dark"] .dashboard-shell .insight-kicker,
+:root[data-theme="dark"] .dashboard-shell .health-metrics span,
+:root[data-theme="dark"] .dashboard-shell .health-score span,
+:root[data-theme="dark"] .dashboard-shell .insight-footnote,
+:root[data-theme="dark"] .dashboard-shell .trend-footer,
+:root[data-theme="dark"] .dashboard-shell .alert-list li p,
+:root[data-theme="dark"] .dashboard-shell .alert-list time {
+  color: #a1a4b1;
+}
+
+:root[data-theme="dark"] .dashboard-shell .health-metrics div,
+:root[data-theme="dark"] .dashboard-shell .window-switch,
+:root[data-theme="dark"] .dashboard-shell .alert-list li {
+  background: #25272f;
+  border-color: #393b46;
+}
+
+:root[data-theme="dark"] .dashboard-shell .window-switch button {
+  color: #b8bac5;
+}
+
+:root[data-theme="dark"] .dashboard-shell .window-switch button.selected {
+  background: #7545dc;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .dashboard-shell .health-badge.healthy,
+:root[data-theme="dark"] .dashboard-shell .online-count {
+  background: #173a2d;
+  color: #a5f0ce;
+}
+
+:root[data-theme="dark"] .dashboard-shell .health-badge.degraded,
+:root[data-theme="dark"] .dashboard-shell .alert-count {
+  background: #40351f;
+  color: #f2cc78;
+}
+
+:root[data-theme="dark"] .dashboard-shell .health-badge.poor {
+  background: #402628;
+  color: #f07878;
+}
+
+:root[data-theme="dark"] .dashboard-shell .health-badge.unknown {
+  background: #30313a;
+  color: #c4c6d0;
+}
+
+:root[data-theme="dark"] .dashboard-shell .empty-trend,
+:root[data-theme="dark"] .dashboard-shell .empty-inventory {
+  color: #a1a4b1;
+}
+
+:root[data-theme="dark"] .dashboard-shell .trend-chart .recharts-cartesian-grid line {
+  stroke: #393b46;
+}
+
+:root[data-theme="dark"] .dashboard-shell .trend-chart .recharts-text {
+  fill: #b7bac5;
+}
+
+:root[data-theme="dark"] .dashboard-shell .trend-chart .recharts-default-tooltip {
+  background: #25272f !important;
+  border-color: #484a56 !important;
+  color: #e4e5eb;
+}
+
+:root[data-theme="dark"] .dashboard-shell .device-detail-link {
+  color: #c4a5ff;
+}
+
+:root[data-theme="dark"] .device-details-page {
+  background: #17181e;
+  color: #e4e5eb;
+}
+
+:root[data-theme="dark"] .device-facts div,
+:root[data-theme="dark"] .device-traffic-card {
+  background: #202127;
+  border-color: #343640;
+}
+
+:root[data-theme="dark"] .device-facts span,
+:root[data-theme="dark"] .device-total-stats span {
+  color: #a1a4b1;
+}
+
+:root[data-theme="dark"] .device-facts strong,
+:root[data-theme="dark"] .device-total-stats strong,
+:root[data-theme="dark"] .device-traffic-heading h2 {
+  color: #e4e5eb;
+}
+
+:root[data-theme="dark"] .device-facts strong.online {
+  color: #54d694;
+}
+
+:root[data-theme="dark"] .device-facts strong.offline {
+  color: #a1a4b1;
+}
+
+:root[data-theme="dark"] .device-error {
+  border-color: #613b3e;
+  background: #402628;
+  color: #f3a0a0;
+}
+
+:root[data-theme="dark"] .device-traffic-heading select {
+  background: #25272f;
+  border-color: #484a56;
+  color: #e4e5eb;
+}
+
+:root[data-theme="dark"] .device-traffic-chart .recharts-cartesian-grid line {
+  stroke: #393b46;
+}
+
+:root[data-theme="dark"] .device-traffic-chart .recharts-text {
+  fill: #b7bac5;
+}
+
+:root[data-theme="dark"] .device-traffic-chart > p {
+  color: #a1a4b1;
+}
+
 :root[data-theme="dark"] .learn-header {
   background: #131318;
   border-color: #2b2c34;

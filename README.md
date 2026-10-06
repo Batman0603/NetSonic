@@ -114,6 +114,16 @@ Choose **Record session** while monitoring is active to retain one-second traffi
 
 Use **Customize dashboard** to show or hide Discovery, Topology, Traffic, and Sonification panels and move them up or down. The arrangement is saved locally in the browser.
 
+## Historical telemetry, health, inventory, and alerts
+
+The dashboard stores aggregate telemetry every 15 seconds while packet capture is active. It retains the most recent seven days in SQLite and offers 5 minute, 1 hour, 24 hour, and 7 day trend views. The dashboard charts upload and download rates. Device details show historical packet and byte totals from peer counters. History begins when this backend version first collects samples; earlier traffic is not reconstructed.
+
+The network health card displays a 0–100 heuristic score with gateway latency, packet loss, jitter, availability, and traffic health. Gateway metrics come from periodic ICMP probes while capture is running. The score weights latency, packet loss, availability, and traffic health; it is an operational signal, not a diagnosis. Metrics remain unknown until probes are collected, and gateway ping support depends on the host operating system and permissions.
+
+Device inventory records IP, MAC address, hostname, first seen, and last seen. A successful discovery scan updates responding devices and marks known devices in that scanned subnet offline when they do not respond. Offline state therefore reflects the most recent scan, not a continuous reachability check.
+
+The alert feed stores events for newly discovered and offline devices, high packet rates, traffic spikes, high gateway latency, packet loss, and packet-rate anomalies against recent samples. Repeated threshold events are deduplicated by type and day. These rules are fixed defaults in this release.
+
 ## Configuration
 
 Copy the templates before changing local settings:
@@ -135,12 +145,16 @@ The backend creates its SQLite database automatically when it starts. With the c
 | `GET /api/interfaces` | List local network interfaces |
 | `POST /api/discovery/scan` | Discover devices on an authorized subnet |
 | `GET /api/devices` | List known devices |
+| `GET /api/devices/{id}` · `GET /api/devices/{id}/traffic` | Read device details and historical traffic for a selected time range |
 | `GET /api/topology` | Get network topology data |
 | `POST /api/traffic/start` · `POST /api/traffic/stop` | Control traffic monitoring |
 | `GET /api/traffic/status` · `GET /api/traffic/snapshot` | Read monitoring state and traffic summary |
 | `POST /api/sonification/start` · `POST /api/sonification/stop` | Control sonification service |
 | `GET /api/sonification/config` · `PUT /api/sonification/config` | Read or update sonification settings |
 | `WS /api/sonification/stream` | Receive live sonification updates |
+| `GET /api/history/traffic?window=5m\|1h\|24h\|7d` | Read persisted traffic trends |
+| `GET /api/health/network` · `GET /api/health/network/history` | Read current network health and its historical trend |
+| `GET /api/alerts` | Read recent network alerts |
 
 For request and response details, use the interactive [API docs](http://127.0.0.1:8000/docs) while the backend is running.
 

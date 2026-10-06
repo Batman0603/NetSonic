@@ -1,4 +1,5 @@
 import type { Device } from "../services/discovery";
+import { Link } from "react-router-dom";
 
 interface DeviceTableProps {
   devices: Device[];
@@ -29,6 +30,7 @@ export function DeviceTable({ devices }: DeviceTableProps) {
       <table className="device-table">
         <thead>
           <tr>
+            <th>Device</th>
             <th>IP address</th>
             <th>MAC address</th>
             <th>Hostname</th>
@@ -40,9 +42,10 @@ export function DeviceTable({ devices }: DeviceTableProps) {
         <tbody>
           {devices.map((device) => (
             <tr key={device.id}>
+              <td><Link className="device-detail-link" to={`/devices/${device.id}`}>{device.label ?? device.hostname ?? device.ip_address}</Link></td>
               <td className="mono">{device.ip_address}</td>
               <td className="mono">{device.mac_address ?? "Unavailable"}</td>
-              <td>{device.label ?? device.hostname ?? "Unknown device"}</td>
+              <td>{device.hostname ?? "Unknown device"}</td>
               <td>
                 <span className={`device-status status-${device.status}`}>
                   {device.status}

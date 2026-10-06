@@ -21,6 +21,7 @@ from app.discovery.arp_scanner import (
 )
 from app.discovery.interfaces import InterfaceInfo, list_ipv4_interfaces
 from app.models.device import Device
+from app.models.telemetry import Alert
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +114,15 @@ def _upsert_device(
             last_seen=observed_at,
         )
         db.add(device)
+        db.flush()
+        db.add(Alert(
+            created_at=observed_at,
+            type="new_device",
+            severity="info",
+            title="New device discovered",
+            message=f"{host.ip_address} joined the discovered device inventory.",
+            fingerprint=f"new_device:{host.ip_address}:{observed_at.date().isoformat()}",
+        ))
     else:
         device.mac_address = host.mac_address
         device.status = "online"
@@ -147,6 +157,25 @@ def discover_devices(
     observed_at = datetime.now(timezone.utc)
 
     try:
+        seen_ips = {host.ip_address for host in hosts}
+        network = ipaddress.ip_network(str(subnet), strict=False)
+        for existing in db.scalars(select(Device)).all():
+            try:
+                belongs_to_scan = ipaddress.ip_address(existing.ip_address) in network
+            except ValueError:
+                belongs_to_scan = False
+            if belongs_to_scan and existing.ip_address not in seen_ips and existing.status != "offline":
+                existing.status = "offline"
+                fingerprint = f"device_offline:{existing.ip_address}:{observed_at.date().isoformat()}"
+                if db.scalar(select(Alert).where(Alert.fingerprint == fingerprint)) is None:
+                    db.add(Alert(
+                        created_at=observed_at,
+                        type="device_offline",
+                        severity="warning",
+                        title="Device went offline",
+                        message=f"{existing.ip_address} did not respond to the latest subnet scan.",
+                        fingerprint=fingerprint,
+                    ))
         devices = [
             _upsert_device(db, host, observed_at)
             for host in hosts

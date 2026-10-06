@@ -80,6 +80,10 @@ export async function getDevices(): Promise<DeviceListResponse> {
   return request<DeviceListResponse>("/api/devices");
 }
 
+export async function getDevice(deviceId: number): Promise<Device> {
+  return request<Device>(`/api/devices/${deviceId}`);
+}
+
 export async function scanNetwork(
   interfaceName: string,
   subnet: string,

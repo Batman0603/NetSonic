@@ -425,6 +425,23 @@ class TrafficAggregator:
                     )[:10]
                 ],
 
+                # Persistence consumes the complete set so low-volume devices
+                # still receive per-device history; the public live view stays bounded.
+                "all_peers": [
+                    {
+                        "ip_address": peer_ip,
+                        "direction": direction,
+                        "packets": counter.packets,
+                        "bytes": counter.bytes,
+                    }
+                    for (peer_ip, direction), counter
+                    in sorted(
+                        peers.items(),
+                        key=lambda item: item[1].bytes,
+                        reverse=True,
+                    )
+                ],
+
                 "peer_protocols": [
                     {
                         "ip_address": peer_ip,

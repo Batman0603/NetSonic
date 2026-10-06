@@ -1,3 +1,5 @@
+import asyncio
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -10,11 +12,14 @@ from app.api.interfaces import router as interfaces_router
 from app.api.traffic import router as traffic_router
 from app.api.topology import router as topology_router
 from app.api.sonification import router as sonification_router
+from app.api.telemetry import router as telemetry_router
 
 from app.core.logging_config import configure_logging
 from app.db.session import Base, engine
 from app.discovery.interfaces import list_ipv4_interfaces
 from app.traffic.service import traffic_monitor
+from app.telemetry.service import record_telemetry
+from app.models.telemetry import Alert, DeviceTrafficSample, TelemetrySample  # noqa: F401
 
 # Ensure SQLAlchemy registers the Device model before creating tables.
 from app.models.device import Device  # noqa: F401
@@ -22,6 +27,7 @@ from app.models.device import Device  # noqa: F401
 
 # Configure application logging.
 configure_logging()
+logger = logging.getLogger(__name__)
 
 
 # Frontend development URLs.
@@ -63,6 +69,16 @@ async def lifespan(app: FastAPI):
 
     Base.metadata.create_all(bind=engine)
 
+    async def persist_telemetry() -> None:
+        while True:
+            try:
+                await asyncio.to_thread(record_telemetry)
+            except Exception:
+                logger.exception("Unable to persist a telemetry sample.")
+            await asyncio.sleep(15)
+
+    telemetry_task = asyncio.create_task(persist_telemetry())
+
     try:
         default_interface = get_default_interface()
 
@@ -97,6 +113,11 @@ async def lifespan(app: FastAPI):
         print(
             f"Unable to stop traffic monitoring cleanly: {exc}"
         )
+    telemetry_task.cancel()
+    try:
+        await telemetry_task
+    except asyncio.CancelledError:
+        pass
 
 
 app = FastAPI(
@@ -163,6 +184,8 @@ app.include_router(
     sonification_router,
     prefix="/api",
 )
+
+app.include_router(telemetry_router, prefix="/api")
 
 
 @app.get("/", tags=["Root"])
