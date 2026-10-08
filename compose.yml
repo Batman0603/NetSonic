@@ -1,0 +1,35 @@
+services:
+  backend:
+    image: localhost/netsonic-backend:phase2
+    container_name: netsonic-backend
+    restart: unless-stopped
+
+    expose:
+      - "8000"
+
+    volumes:
+      - netsonic-data:/app
+
+    networks:
+      - netsonic-network
+
+  frontend:
+    image: localhost/netsonic-frontend:phase3
+    container_name: netsonic-frontend
+    restart: unless-stopped
+
+    ports:
+      - "8080:80"
+
+    depends_on:
+      - backend
+
+    networks:
+      - netsonic-network
+
+networks:
+  netsonic-network:
+    driver: bridge
+
+volumes:
+  netsonic-data:

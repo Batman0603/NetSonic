@@ -1,5 +1,5 @@
-/** HTTP origin used for sonification controls and status. */
-const API_BASE_URL = "http://127.0.0.1:8000/api";
+/** HTTP API base path used through the Nginx reverse proxy. */
+const API_BASE_URL = "/api";
 
 export interface SonificationParameters {
   pitch_hz: number;
@@ -129,10 +129,16 @@ export async function getSonificationStatus(): Promise<SonificationStatus> {
   );
 }
 
-/** Open the live update stream; the caller owns reconnection and cleanup. */
+/**
+ * Open the live sonification WebSocket through the same host/port
+ * used by the browser. Nginx forwards this connection to FastAPI.
+ */
 export function createSonificationWebSocket(): WebSocket {
+  const protocol =
+    window.location.protocol === "https:" ? "wss:" : "ws:";
+
   const websocketUrl =
-    "ws://127.0.0.1:8000/api/sonification/stream";
+    `${protocol}//${window.location.host}/api/sonification/stream`;
 
   return new WebSocket(websocketUrl);
 }
