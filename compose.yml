@@ -1,20 +1,26 @@
+```yaml
 services:
   backend:
-    image: localhost/netsonic-backend:phase2
+    image: ghcr.io/batman0603/netsonic-backend:latest
     container_name: netsonic-backend
     restart: unless-stopped
+
+    environment:
+      DATABASE_URL: "sqlite:////data/netsonic.db"
+      APP_ENV: "production"
+      LOG_LEVEL: "INFO"
 
     expose:
       - "8000"
 
     volumes:
-      - netsonic-data:/app
+      - netsonic-data:/data
 
     networks:
       - netsonic-network
 
   frontend:
-    image: localhost/netsonic-frontend:phase3
+    image: ghcr.io/batman0603/netsonic-frontend:latest
     container_name: netsonic-frontend
     restart: unless-stopped
 
@@ -33,3 +39,4 @@ networks:
 
 volumes:
   netsonic-data:
+```
