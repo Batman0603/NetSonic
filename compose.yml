@@ -1,9 +1,15 @@
-
 services:
   backend:
-    image: ghcr.io/batman0603/netsonic-backend:latest
+    image: netsonic-backend:local
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: netsonic-backend
     restart: unless-stopped
+
+    # Required for raw packet capture with Scapy.
+    cap_add:
+      - NET_RAW
 
     environment:
       DATABASE_URL: "sqlite:////data/netsonic.db"
