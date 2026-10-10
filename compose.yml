@@ -1,4 +1,4 @@
-```yaml
+
 services:
   backend:
     image: ghcr.io/batman0603/netsonic-backend:latest
@@ -39,4 +39,3 @@ networks:
 
 volumes:
   netsonic-data:
-```
