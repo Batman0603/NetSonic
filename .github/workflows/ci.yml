@@ -116,3 +116,36 @@ jobs:
           tags: |
             ghcr.io/${{ env.IMAGE_OWNER }}/netsonic-frontend:latest
             ghcr.io/${{ env.IMAGE_OWNER }}/netsonic-frontend:sha-${{ github.sha }}
+
+
+  deploy:
+    name: Deploy NetSonic to Fedora
+    runs-on: [self-hosted, Linux, X64]
+    needs:
+      - backend-tests
+      - frontend-build
+      - container-build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy latest images
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cd "$HOME/Documents/NetSonic"
+
+          podman compose pull
+          podman compose up -d --remove-orphans
+
+          for attempt in {1..30}; do
+            if curl --fail --silent http://localhost:8080/api/health; then
+              echo
+              echo "NetSonic deployment successful."
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "NetSonic health check failed."
+          podman compose logs --tail=100
+          exit 1
