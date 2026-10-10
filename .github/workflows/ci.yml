@@ -118,6 +118,7 @@ jobs:
             ghcr.io/${{ env.IMAGE_OWNER }}/netsonic-frontend:sha-${{ github.sha }}
 
 
+
   deploy:
     name: Deploy NetSonic to Fedora
     runs-on: [self-hosted, Linux, X64]
@@ -126,17 +127,41 @@ jobs:
       - frontend-build
       - container-build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
     steps:
       - name: Deploy latest images
         shell: bash
+        env:
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+          IMAGE_TAG: sha-${{ github.sha }}
         run: |
           set -euo pipefail
 
           cd "$HOME/Documents/NetSonic"
 
-          podman compose pull
+          # Authenticate to GitHub Container Registry.
+          printf '%s' "$GHCR_READ_TOKEN" |
+            podman login ghcr.io \
+              --username "$GHCR_USERNAME" \
+              --password-stdin
+
+          # Pull the exact images published by this workflow run.
+          podman pull "ghcr.io/batman0603/netsonic-backend:${IMAGE_TAG}"
+          podman pull "ghcr.io/batman0603/netsonic-frontend:${IMAGE_TAG}"
+
+          # Update the Compose deployment to use these exact images.
+          podman tag \
+            "ghcr.io/batman0603/netsonic-backend:${IMAGE_TAG}" \
+            "ghcr.io/batman0603/netsonic-backend:latest"
+
+          podman tag \
+            "ghcr.io/batman0603/netsonic-frontend:${IMAGE_TAG}" \
+            "ghcr.io/batman0603/netsonic-frontend:latest"
+
           podman compose up -d --remove-orphans
 
+          # Verify that the API becomes healthy.
           for attempt in {1..30}; do
             if curl --fail --silent http://localhost:8080/api/health; then
               echo
